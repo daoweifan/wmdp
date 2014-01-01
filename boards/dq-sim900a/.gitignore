@@ -26,5 +26,6 @@
 *.bin
 
 #project files
+project
 project/*
 build/*
