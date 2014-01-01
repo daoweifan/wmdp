@@ -1,0 +1,8 @@
+from building import *
+
+cwd     = GetCurrentDir()
+src     = Glob('*.c')
+CPPPATH = ''
+group   = DefineGroup('drivers', src, depend = ['CONFIG_USING_SERIAL'], CPPPATH = CPPPATH)
+
+Return('group')

@@ -1,0 +1,8 @@
+from building import *
+
+cwd     = GetCurrentDir()
+src     = ['Retarget.c']
+CPPPATH = ''
+group   = DefineGroup('keil', src, depend = ['CONFIG_REDIRECT_STDIO'], CPPPATH = CPPPATH)
+
+Return('group')

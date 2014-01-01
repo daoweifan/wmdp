@@ -1,0 +1,21 @@
+# for module compiling
+Import('DDDP_ROOT')
+Import('dddp_config')
+import os
+from building import *
+
+objs = []
+cwd  = GetCurrentDir()
+list = os.listdir(cwd)
+
+for item in list:
+    if dddp_config.CROSS_TOOL == 'keil':
+        if item == 'iar':
+            continue
+    if dddp_config.CROSS_TOOL == 'iar':
+        if item == 'keil':
+            continue
+    if os.path.isfile(os.path.join(cwd, item, 'SConscript')):
+        objs = objs + SConscript(os.path.join(item, 'SConscript'))
+
+Return('objs')

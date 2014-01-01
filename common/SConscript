@@ -1,0 +1,11 @@
+Import('dddp_config')
+from building import *
+
+cwd     = GetCurrentDir()
+src     = Glob('*.c')
+src     =['device.c', 'ringbuf.c', 'console.c']
+CPPPATH = [cwd]
+
+group = DefineGroup('common', src, depend = ['CONFIG_USING_COMMON'], CPPPATH = CPPPATH)
+
+Return('group')
