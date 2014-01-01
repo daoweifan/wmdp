@@ -1,0 +1,42 @@
+#
+# NOTE! Don't add files that are generated in specific
+# subdirectories here. Add them in the ".gitignore" file
+# in that subdirectory instead.
+#
+# Normal rules
+#
+
+*.rej
+*.orig
+*.a
+*.o
+*.exe
+*~
+*.swp
+*.patch
+*.dep
+.*
+*.pyc
+*.map
+*.out
+*.s
+
+#debug files
+*.gdbinit
+
+#target files
+*.elf
+*.bin
+make.env
+
+#ewarm files
+projects/*
+
+#config
+.config
+.config.old
+autoconfig.h
+main.tk
+lconfig.tk
+
+sourceinsight
