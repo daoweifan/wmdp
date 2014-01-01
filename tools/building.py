@@ -179,7 +179,7 @@ def PrepareBuilding(env, root_directory, has_libcpu=False, remove_components = [
         )
 
     # board build script
-    objs = SConscript('SConscript', variant_dir='build', duplicate=0)
+    objs = SConscript('SConscript', variant_dir='project/build', duplicate=0)
     Repository(Rtt_Root)
     # include kernel
     # objs.extend(SConscript(Rtt_Root + '/src/SConscript', variant_dir='build/src', duplicate=0))
