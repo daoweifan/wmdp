@@ -185,11 +185,11 @@ def PrepareBuilding(env, root_directory, has_libcpu=False, remove_components = [
     # objs.extend(SConscript(Rtt_Root + '/src/SConscript', variant_dir='build/src', duplicate=0))
     # include libcpu
     if not has_libcpu:
-        objs.extend(SConscript(Rtt_Root + '/libcpu/SConscript', variant_dir='build/libcpu', duplicate=0))
-    objs.extend(SConscript(Rtt_Root + '/drivers/SConscript', variant_dir='build/drivers', duplicate=0))
-    objs.extend(SConscript(Rtt_Root + '/common/SConscript', variant_dir='build/common', duplicate=0))
-    objs.extend(SConscript(Rtt_Root + '/main/SConscript', variant_dir='build/main', duplicate=0))
-    objs.extend(SConscript(Rtt_Root + '/components/SConscript', variant_dir='build/components', duplicate=0))
+        objs.extend(SConscript(Rtt_Root + '/libcpu/SConscript', variant_dir='project/build/libcpu', duplicate=0))
+    objs.extend(SConscript(Rtt_Root + '/drivers/SConscript', variant_dir='project/build/drivers', duplicate=0))
+    objs.extend(SConscript(Rtt_Root + '/common/SConscript', variant_dir='project/build/common', duplicate=0))
+    objs.extend(SConscript(Rtt_Root + '/main/SConscript', variant_dir='project/build/main', duplicate=0))
+    objs.extend(SConscript(Rtt_Root + '/components/SConscript', variant_dir='project/build/components', duplicate=0))
     # include components
     # objs.extend(SConscript(Rtt_Root + '/components/SConscript',
                            # variant_dir='build/components',
@@ -375,10 +375,10 @@ def EndBuilding(target, program = None):
                 print 'No template project file found.'
 
     if GetOption('target') == 'mdk4':
-        MDK4Project('project.uvproj', Projects)
+        MDK4Project('project\\project.uvproj', Projects)
 
     if GetOption('target') == 'iar':
-        IARProject('project.ewp', Projects) 
+        IARProject('project\\project.ewp', Projects) 
 
     if GetOption('target') == 'vs':
         VSProject('project.vcproj', Projects, program)
