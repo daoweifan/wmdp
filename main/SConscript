@@ -1,4 +1,4 @@
-Import('dddp_config')
+Import('wmconfig')
 from building import *
 
 cwd     = GetCurrentDir()

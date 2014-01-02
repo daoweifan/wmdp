@@ -11,7 +11,7 @@
  * Date           Author       Notes
  * 2010-03-22     Bernard      first version
  */
-#include "dddp_config.h"
+#include "wmconfig.h"
 #include "finsh.h"
 
 #include "finsh_var.h"

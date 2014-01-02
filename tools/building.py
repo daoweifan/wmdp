@@ -33,7 +33,7 @@ class Win32Spawn:
 
 def PrepareBuilding(env, root_directory, has_libcpu=False, remove_components = []):
     import SCons.cpp
-    import dddp_config
+    import wmconfig
 
     global BuildOptions
     global Projects
@@ -44,10 +44,10 @@ def PrepareBuilding(env, root_directory, has_libcpu=False, remove_components = [
     Rtt_Root = root_directory
 
     # add compability with Keil MDK 4.6 which changes the directory of armcc.exe
-    if dddp_config.PLATFORM == 'armcc':
-        if not os.path.isfile(os.path.join(dddp_config.EXEC_PATH, 'armcc.exe')):
-            if dddp_config.EXEC_PATH.find('bin40') > 0:
-                dddp_config.EXEC_PATH = dddp_config.EXEC_PATH.replace('bin40', 'armcc/bin')
+    if wmconfig.PLATFORM == 'armcc':
+        if not os.path.isfile(os.path.join(wmconfig.EXEC_PATH, 'armcc.exe')):
+            if wmconfig.EXEC_PATH.find('bin40') > 0:
+                wmconfig.EXEC_PATH = wmconfig.EXEC_PATH.replace('bin40', 'armcc/bin')
                 Env['LINKFLAGS']=Env['LINKFLAGS'].replace('RV31', 'armcc')
 
         # reset AR command flags 
@@ -56,22 +56,22 @@ def PrepareBuilding(env, root_directory, has_libcpu=False, remove_components = [
         env['LIBSUFFIX']   = '_rvds.lib'
 
     # patch for win32 spawn
-    if env['PLATFORM'] == 'win32' and dddp_config.PLATFORM == 'gcc':
+    if env['PLATFORM'] == 'win32' and wmconfig.PLATFORM == 'gcc':
         win32_spawn = Win32Spawn()
         win32_spawn.env = env
         env['SPAWN'] = win32_spawn.spawn
     
     if env['PLATFORM'] == 'win32':
-        os.environ['PATH'] = dddp_config.EXEC_PATH + ";" + os.environ['PATH']
+        os.environ['PATH'] = wmconfig.EXEC_PATH + ";" + os.environ['PATH']
     else:
-        os.environ['PATH'] = dddp_config.EXEC_PATH + ":" + os.environ['PATH']
+        os.environ['PATH'] = wmconfig.EXEC_PATH + ":" + os.environ['PATH']
 
     # add program path
-    env.PrependENVPath('PATH', dddp_config.EXEC_PATH)
+    env.PrependENVPath('PATH', wmconfig.EXEC_PATH)
 
-    # parse dddp_config.h to get used component
+    # parse wmconfig.h to get used component
     PreProcessor = SCons.cpp.PreProcessor()
-    f = file('dddp_config.h', 'r')
+    f = file('wmconfig.h', 'r')
     contents = f.read()
     f.close()
     PreProcessor.process_contents(contents)
@@ -120,7 +120,7 @@ def PrepareBuilding(env, root_directory, has_libcpu=False, remove_components = [
         env.Append(CXXFLAGS=['-fsyntax-only', '-Wall', '-Wno-invalid-source-encoding'])
         # remove the POST_ACTION as it will cause meaningless errors(file not
         # found or something like that).
-        dddp_config.POST_ACTION = ''
+        wmconfig.POST_ACTION = ''
 
     # add build library option
     AddOption('--buildlib', 
@@ -151,13 +151,13 @@ def PrepareBuilding(env, root_directory, has_libcpu=False, remove_components = [
 
         SetOption('no_exec', 1)
         try:
-            dddp_config.CROSS_TOOL, dddp_config.PLATFORM = tgt_dict[tgt_name]
+            wmconfig.CROSS_TOOL, wmconfig.PLATFORM = tgt_dict[tgt_name]
         except KeyError:
             print 'Unknow target: %s. Avaible targets: %s' % \
                     (tgt_name, ', '.join(tgt_dict.keys()))
             sys.exit(1)
     elif (GetDepend('RT_USING_NEWLIB') == False and GetDepend('RT_USING_NOLIBC') == False) \
-        and dddp_config.PLATFORM == 'gcc':
+        and wmconfig.PLATFORM == 'gcc':
         AddDepend('RT_USING_MINILIBC')
 
     # add comstr option
@@ -200,7 +200,7 @@ def PrepareBuilding(env, root_directory, has_libcpu=False, remove_components = [
 
 def PrepareModuleBuilding(env, root_directory):
     import SCons.cpp
-    import dddp_config
+    import wmconfig
 
     global BuildOptions
     global Projects
@@ -211,7 +211,7 @@ def PrepareModuleBuilding(env, root_directory):
     Rtt_Root = root_directory
 
     # add program path
-    env.PrependENVPath('PATH', dddp_config.EXEC_PATH)
+    env.PrependENVPath('PATH', wmconfig.EXEC_PATH)
 
 def GetConfigValue(name):
     assert type(name) == str, 'GetConfigValue: only string parameter is valid'
@@ -353,7 +353,7 @@ def DoBuilding(target, objects):
 
 
 def EndBuilding(target, program = None):
-    import dddp_config
+    import wmconfig
     from keil import MDKProject
     from keil import MDK4Project
     from iar import IARProject
@@ -361,7 +361,7 @@ def EndBuilding(target, program = None):
     from vs2012 import VS2012Project
     from codeblocks import CBProject
 
-    Env.AddPostAction(target, dddp_config.POST_ACTION)
+    Env.AddPostAction(target, wmconfig.POST_ACTION)
 
     if GetOption('target') == 'mdk':
         template = os.path.isfile('template.Uv2')

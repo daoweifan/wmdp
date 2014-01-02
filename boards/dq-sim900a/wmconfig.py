@@ -5,8 +5,8 @@ ARCH='cortex-m3'
 CPU='stm32f10x'
 CROSS_TOOL='keil'
 
-if os.getenv('DDDP_CC'):
-	CROSS_TOOL = os.getenv('DDDP_CC')
+if os.getenv('WM_CC'):
+	CROSS_TOOL = os.getenv('WM_CC')
 
 #device options
 # STM32_TYPE = 

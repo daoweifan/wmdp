@@ -1,4 +1,4 @@
-Import('DDDP_ROOT')
+Import('WM_ROOT')
 from building import *
 
 cwd = GetCurrentDir()

@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "dddp_config.h"
+#include "wmconfig.h"
 #include "shell.h"
 #include "debug.h"
 #include "def.h"

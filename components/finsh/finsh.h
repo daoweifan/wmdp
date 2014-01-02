@@ -14,7 +14,7 @@
 #ifndef __FINSH_H__
 #define __FINSH_H__
 
-#include "dddp_config.h"
+#include "wmconfig.h"
 #include "def.h"
 
 #define CONFIG_FINSH_USING_SYMTAB

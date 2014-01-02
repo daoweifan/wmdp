@@ -1,24 +1,24 @@
 # for module compiling
 import os
-Import('DDDP_ROOT')
+Import('WM_ROOT')
 
-Import('dddp_config')
+Import('wmconfig')
 from building import *
 
 cwd     = GetCurrentDir()
 src     = Glob('*.c')
 CPPPATH = [cwd]
-if dddp_config.CROSS_TOOL == 'keil':
+if wmconfig.CROSS_TOOL == 'keil':
     LINKFLAGS = ' --keep *_entry '
 else:
     LINKFLAGS = '' 
 
-CPPPATH =CPPPATH + [DDDP_ROOT + '/boards/dq-sim900a']
-CPPPATH =CPPPATH + [DDDP_ROOT + '/include']
-# CPPPATH = CPPPATH + [DDDP_ROOT + '/libcpu/stm32/StdPeriph/inc']
-# CPPPATH = CPPPATH + [DDDP_ROOT + '/libcpu/stm32/cmsis']
-# CPPPATH = CPPPATH + [DDDP_ROOT + '/libcpu/ARM_CM3']
-# CPPPATH = CPPPATH + [DDDP_ROOT + '/libcpu/cmsis']
+CPPPATH =CPPPATH + [WM_ROOT + '/boards/dq-sim900a']
+CPPPATH =CPPPATH + [WM_ROOT + '/include']
+# CPPPATH = CPPPATH + [WM_ROOT + '/libcpu/stm32/StdPeriph/inc']
+# CPPPATH = CPPPATH + [WM_ROOT + '/libcpu/stm32/cmsis']
+# CPPPATH = CPPPATH + [WM_ROOT + '/libcpu/ARM_CM3']
+# CPPPATH = CPPPATH + [WM_ROOT + '/libcpu/cmsis']
 
 group = DefineGroup('app', src, depend = [''], CPPPATH = CPPPATH, LINKFLAGS = LINKFLAGS)
 

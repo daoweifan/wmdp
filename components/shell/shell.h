@@ -22,7 +22,7 @@
 #ifndef __SHELL_H_
 #define __SHELL_H_
 
-#include "dddp_config.h"
+#include "wmconfig.h"
 #include "device.h"
 #include "command.h"
 

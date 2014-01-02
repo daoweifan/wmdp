@@ -1,6 +1,6 @@
 # for module compiling
 import os
-Import('DDDP_ROOT')
+Import('WM_ROOT')
 
 cwd = str(Dir('#'))
 objs = []

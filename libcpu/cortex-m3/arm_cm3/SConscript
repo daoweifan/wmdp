@@ -1,11 +1,11 @@
-Import('dddp_config')
+Import('wmconfig')
 from building import *
 
 cwd     = GetCurrentDir()
 CPPPATH = [cwd]
-if dddp_config.CROSS_TOOL == 'keil':
+if wmconfig.CROSS_TOOL == 'keil':
     src     = Glob('*_keil.s')
-elif dddp_config.CROSS_TOOL == 'iar':
+elif wmconfig.CROSS_TOOL == 'iar':
     src     = Glob('*_iar.s')
 else :
     LINKFLAGS = ''

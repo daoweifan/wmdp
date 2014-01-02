@@ -1,6 +1,6 @@
 # for module compiling
-Import('DDDP_ROOT')
-Import('dddp_config')
+Import('WM_ROOT')
+Import('wmconfig')
 import os
 from building import *
 
@@ -9,7 +9,7 @@ cwd  = GetCurrentDir()
 list = os.listdir(cwd)
 
 for item in list:
-    if item == dddp_config.ARCH:
+    if item == wmconfig.ARCH:
         if os.path.isfile(os.path.join(cwd, item, 'SConscript')):
             objs = objs + SConscript(os.path.join(item, 'SConscript'))
 

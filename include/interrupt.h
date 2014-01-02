@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-#include "dddp_config.h"
+#include "wmconfig.h"
 
 #if (CONFIG_CPU_STM32==1) || (CONFIG_CPU_LM3S==1) || (CONFIG_CPU_SAM3U==1)
 void DISABLE_INTERRUPTS(void);

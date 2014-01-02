@@ -15,7 +15,7 @@
 #ifndef __SHELL_H__
 #define __SHELL_H__
 
-#include "dddp_config.h"
+#include "wmconfig.h"
 #include "finsh.h"
 #include "device.h"
 #include "def.h"

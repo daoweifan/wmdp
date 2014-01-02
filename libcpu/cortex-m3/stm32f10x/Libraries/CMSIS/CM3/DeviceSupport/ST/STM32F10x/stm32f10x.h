@@ -54,7 +54,7 @@
  extern "C" {
 #endif 
 
-#include "dddp_config.h"
+#include "wmconfig.h"
 
 /** @addtogroup Library_configuration_section
   * @{

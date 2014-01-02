@@ -19,7 +19,7 @@
 * licensing fee.
 *********************************************************************************************************
 */
-#include "dddp_config.h"
+#include "wmconfig.h"
 #include "os_time.h"
 
 void time_hwInit(void);

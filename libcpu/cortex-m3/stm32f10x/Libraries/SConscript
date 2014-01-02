@@ -1,5 +1,5 @@
-import dddp_config
-Import('DDDP_ROOT')
+import wmconfig
+Import('WM_ROOT')
 from building import *
 
 # get current directory
@@ -45,12 +45,12 @@ startup_scripts['STM32F10X_MD_VL']  = 'startup_stm32f10x_md_vl.s'
 startup_scripts['STM32F10X_XL']	    = 'startup_stm32f10x_xl.s'
 
 # add for startup script 
-if dddp_config.CROSS_TOOL == 'gcc':
-    src = src + ['CMSIS/CM3/DeviceSupport/ST/STM32F10x/startup/gcc_ride7/' + startup_scripts[dddp_config.STM32_TYPE]]
-elif dddp_config.CROSS_TOOL == 'keil':
-    src = src + ['CMSIS/CM3/DeviceSupport/ST/STM32F10x/startup/arm/' + startup_scripts[dddp_config.STM32_TYPE]]
-elif dddp_config.CROSS_TOOL == 'iar':
-    src = src + ['CMSIS/CM3/DeviceSupport/ST/STM32F10x/startup/iar/' + startup_scripts[dddp_config.STM32_TYPE]]
+if wmconfig.CROSS_TOOL == 'gcc':
+    src = src + ['CMSIS/CM3/DeviceSupport/ST/STM32F10x/startup/gcc_ride7/' + startup_scripts[wmconfig.STM32_TYPE]]
+elif wmconfig.CROSS_TOOL == 'keil':
+    src = src + ['CMSIS/CM3/DeviceSupport/ST/STM32F10x/startup/arm/' + startup_scripts[wmconfig.STM32_TYPE]]
+elif wmconfig.CROSS_TOOL == 'iar':
+    src = src + ['CMSIS/CM3/DeviceSupport/ST/STM32F10x/startup/iar/' + startup_scripts[wmconfig.STM32_TYPE]]
 
 path = [cwd + '/STM32F10x_StdPeriph_Driver/inc', 
     cwd + '/CMSIS/CM3/DeviceSupport/ST/STM32F10x']
@@ -61,7 +61,7 @@ src += [cwd + '/CMSIS/CM3/CoreSupport/core_cm3.c']
 # elif GetDepend(['RT_USING_RTT_CMSIS']):
     # path += [RTT_ROOT + '/components/CMSIS/Include']
 
-CPPDEFINES = ['USE_STDPERIPH_DRIVER', dddp_config.STM32_TYPE]
+CPPDEFINES = ['USE_STDPERIPH_DRIVER', wmconfig.STM32_TYPE]
 group = DefineGroup('STM32_StdPeriph', src, depend = [''], CPPPATH = path, CPPDEFINES = CPPDEFINES)
 
 Return('group')
