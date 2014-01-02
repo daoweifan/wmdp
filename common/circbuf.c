@@ -41,6 +41,15 @@ int buf_init (circbuf_t * buf, unsigned int size)
 	return 1;
 }
 
+int buf_flush(circbuf_t * buf)
+{
+	buf->size = 0;
+	buf->top = buf->data;
+	buf->tail = buf->data;
+	buf->end = buf->data + buf->totalsize;
+	return 1;
+}
+
 int buf_free (circbuf_t * buf)
 {
 	assert (buf != NULL);
