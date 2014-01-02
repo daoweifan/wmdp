@@ -22,7 +22,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "circbuf.h"
+#include "common/circbuf.h"
 
 
 int buf_init (circbuf_t * buf, unsigned int size)
