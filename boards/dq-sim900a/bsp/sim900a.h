@@ -1,15 +1,32 @@
 /*
- *  Simcom 6320 GSM Driver
- *
- * @author: Daowei Fan
- */
-#ifndef _SIM6320_H
-#define _SIM6320_H
+*********************************************************************************************************
+*                                                WMDP
+*                                          WM Develop Platform
+*
+*                              (c) Copyright 2010-2014, WM, China
+*                                           All Rights Reserved
+*
+* File    : sim900a.h
+* By      : Fan Daowei
+* Version : V1.0
+*
+* LICENSING TERMS:
+* ---------------
+*   WMDP is provided in source form for FREE evaluation, for educational use or for peaceful research.
+* If you plan on using  WMDP  in a commercial product you need to contact WM to properly license
+* its use in your product. We provide ALL the source code for your convenience and to help you experience
+* WMDP.   The fact that the  source is provided does  NOT  mean that you can use it without  paying a
+* licensing fee.
+*********************************************************************************************************
+*/
+#ifndef _SIM900A_H
+#define _SIM900A_H
 
 enum Power_mode { POWER_OFF=0, POWER_ON, CUT_OFF };
 enum Reply { AT_OK=0, AT_FAIL, AT_ERROR, AT_TIMEOUT };
 
 /* C-API */
+int gsm_init(const char *device_name);                                   /* Connect the gsm module to device */
 int gsm_cmd(const char *cmd);                                            /* Send AT command to modem. Returns AT_OK, AT_FAIL or AT_ERROR */
 int gsm_cmd_fmt(const char *fmt, ...);                                   /* Send formatted string command to modem. */
 int gsm_cmd_wait(const char *cmd, const char *response, int timeout);    /* Send string and wait for a specific response */

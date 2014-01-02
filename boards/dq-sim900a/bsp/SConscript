@@ -3,6 +3,6 @@ from building import *
 cwd     = GetCurrentDir()
 src     = Glob('*.c')
 CPPPATH = cwd
-group   = DefineGroup('slre', src, depend = ['CONFIG_USING_SLRE'], CPPPATH = CPPPATH)
+group   = DefineGroup('bsp', src, depend = ['CONFIG_USING_SIM900A'], CPPPATH = CPPPATH)
 
 Return('group')

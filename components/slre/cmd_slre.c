@@ -43,7 +43,7 @@ static int cmd_slre_func(int argc, char *argv[])
 		struct slre_cap caps[4];
 
 		if (slre_match("^\\s*(\\S+)\\s+(\\S+)\\s+HTTP/(\\d)\\.(\\d)",
-					   request, strlen(request), caps, 4, &error_msg)) {
+					   request, strlen(request), caps, 4)) {
 		  printf("Method: [%.*s], URI: [%.*s]\n",
 				 caps[2].len, caps[2].ptr,
 				 caps[3].len, caps[3].ptr);

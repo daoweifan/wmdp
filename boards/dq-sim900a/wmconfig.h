@@ -37,7 +37,7 @@
 #define CONFIG_USING_UART3           1
 
 /*
- *
+ * components
  */
 #define CONFIG_USING_COMMON          1
 #define CONFIG_CONSOLE_UART1         1
@@ -52,16 +52,16 @@
 /*
  * components shell
  */
-// #define CONFIG_USING_SHELL          1
-// #define CONFIG_USING_SHELL_UART1    1
+#define CONFIG_USING_SHELL          1
+#define CONFIG_USING_SHELL_UART1    1
 // #define CONFIG_USING_SHELL_UART2    1
-// #define CONFIG_USING_SHELL_UART3    1
+#define CONFIG_USING_SHELL_UART3    1
 
 /*
  * components finsh
  */
-#define CONFIG_USING_FINSH          1
-#define CONFIG_USING_FINSH_UART1    1
+// #define CONFIG_USING_FINSH          1
+// #define CONFIG_USING_FINSH_UART1    1
 // #define CONFIG_USING_FINSH_UART2    1
 // #define CONFIG_USING_FINSH_UART3    1
 
@@ -69,3 +69,8 @@
  * components slre
  */
 #define CONFIG_USING_SLRE          1
+
+/*
+ * components
+ */
+#define CONFIG_USING_SIM900A       1

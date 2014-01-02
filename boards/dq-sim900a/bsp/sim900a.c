@@ -7,15 +7,15 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
-#include "config.h"
+#include "wmconfig.h"
 #include "interrupt.h"
-#include "common/slre.h"
-#include "common/ringbuff.h"
+#include "slre.h"
+#include "common/ringbuf.h"
 #include "common/circbuf.h"
-#include "ulp_time.h"
-#include "uart.h"
-#include "sim6320.h"
-#include "linux/stddef.h"
+#include "os_time.h"
+#include "sim900a.h"
+#include "device.h"
+
 
 #define BUFF_SIZE	64
 #define GSM_CMD_LINE_END "\r\n"
@@ -75,11 +75,11 @@ static void parse_sapbr(char *line);
 // static void socket_receive(char *line);
 static void pdp_off(char *line);
 // static void socket_closed(char *line);
+static int32_t gsm_receive_handler(device_t dev, int32_t size);
 
 /* GSM command receive state machine handler, called in uart receive int */
-static int gsm_receive_handler(void);
 static circbuf_t gsm_rx_buf;
-static uart_bus_t *pgsm;
+static struct device * dev_gsm;
 
 typedef struct Message Message;
 struct Message {
@@ -115,22 +115,19 @@ static Message urc_messages[] = {
 };
 
 /* gsm module init function */
-void gsm_init(uart_bus_t * pbus)
+int gsm_init(const char *device_name)
 {
 	/* init gsm hard config */
-	uart_cfg_t cfg = UART_CFG_DEF;
-	cfg.baud = 115200;
-	pgsm = pbus;
-	pgsm->init(&cfg);
-	pgsm->RxIntCallback = gsm_receive_handler;
-
-	/* enable state machine update */
-	pgsm->EnableRxInt();
+	dev_gsm = device_find_by_name(device_name);
+	device_open(dev_gsm, DEVICE_OFLAG_RDWR);
+	device_set_rx_indicate(dev_gsm, gsm_receive_handler);
 
 	buf_init(&gsm_rx_buf, 128);
-	
+
 	/* set gsm apn */
 	strcpy(gsm.ap_name, "CMNET");
+	
+	return 0;
 }
 
 static void pdp_off(char *line)
@@ -143,7 +140,7 @@ static void parse_network(char *line)
 	char network[64], *p;
 	struct slre_cap cap;
 
-	if (slre_match("\"+(.*\"*)", line, strlen(line), &cap, 1, NULL)) {
+	if (slre_match("\"+(.*\"*)", line, strlen(line), &cap, 1)) {
 		memcpy(network, cap.ptr, cap.len);
 		p = strchr(network,'"');
 		if (p) {
@@ -231,10 +228,10 @@ static void handle_error(char *line)
 static Message *lookup_urc_message(const char *line)
 {
 	int n;
-	const char *error_msg;
+	//const char *error_msg;
 	struct slre_cap caps[4];
 	for(n=0; urc_messages[n].msg; n++) {
-		if (0 != slre_match(urc_messages[n].msg, line, strlen(line), caps, 4, &error_msg)) {
+		if (0 != slre_match(urc_messages[n].msg, line, strlen(line), caps, 4)) {
 			return &urc_messages[n];
 		}
 	}
@@ -262,8 +259,8 @@ int gsm_cmd(const char *cmd)
 		i = 0;
 		t = time_get(TIMEOUT_MS);       /* Get System timer current value */
 
-		pgsm->putstr(cmd, strlen(cmd));
-		pgsm->putstr(GSM_CMD_LINE_END, strlen(GSM_CMD_LINE_END));
+		device_write(dev_gsm, 0, cmd, strlen(cmd));
+		device_write(dev_gsm, 0, GSM_CMD_LINE_END, strlen(GSM_CMD_LINE_END));
 
 		while(gsm.waiting_reply) {
 			/* AT Command Response */
@@ -394,7 +391,7 @@ int gsm_wait_cpy(const char *pattern, int timeout, char *line, size_t buf_size)
 			// ENABLE_INTERRUPTS();
 			buf[i++] = c;
 			buf[i] = 0;
-			if (slre_match(pattern, buf, i, caps, 4, NULL) != 0) { //Match
+			if (slre_match(pattern, buf, i, caps, 4) != 0) { //Match
 				break;
 			}
 			if (i == 256) //Buffer full, start new
@@ -467,7 +464,8 @@ int gsm_cmd_wait_fmt(const char *response, int timeout, char *fmt, ...)
 static void slow_send(const char *line)
 {
 	while(*line) {
-		pgsm->putchar(*line);
+		// pgsm->putchar(*line);
+		device_write(dev_gsm, 0, line, 1);
 		mdelay(10);		/* inter-char delay */
 		if ('\r' == *line)
 			mdelay(100);		/* Inter line delay */
@@ -480,10 +478,11 @@ void gsm_uart_write(const char *line)
 	if (!gsm.flags&HW_FLOW_ENABLED)
 		slow_send(line);
 
-	while(*line) {
-		pgsm->putstr(line, strlen(line));
-		line++;
-	}
+	// while(*line) {
+		// pgsm->putstr(line, strlen(line));
+		// line++;
+	// }
+	device_write(dev_gsm, 0, line, strlen(line));
 }
 
 void gsm_uart_write_fmt(const char *fmt, ...)
@@ -501,11 +500,11 @@ void gsm_uart_write_fmt(const char *fmt, ...)
  * Receives charactor from Simcom serial interfaces and store them into buffer.
  * Called in serial interrupt routine
  */
-int gsm_receive_handler(void)
+static int32_t gsm_receive_handler(device_t dev, int32_t size)
 {
-	char ch;
-	ch = (char) pgsm->getchar();
-	buf_push(&gsm_rx_buf, &ch, 1);
+	char ch[8];
+	device_read(dev, 0, ch, size);
+	buf_push(&gsm_rx_buf, ch, size);
 	return 0;
 }
 
@@ -601,6 +600,7 @@ int gsm_gprs_disable()
 	return gsm_cmd("AT+SAPBR=0,1"); //Close Bearer
 }
 
+#if 0
 /****************** GSM TCP API Funciton ************************/
 typedef struct socket {
 	int con;
@@ -820,12 +820,11 @@ void socket_closed(char *line)
 		sockets[s].state = DISCONNECTED;
 	}
 }
-
+#endif
 /************* GSM Module debug command **************/
 #if 1
-#include "shell/cmd.h"
-#include "sys/os.h"
-
+#include "command.h"
+#include "os.h"
 
 static int cmd_gsm_func(int argc, char *argv[])
 {
@@ -847,15 +846,15 @@ static int cmd_gsm_func(int argc, char *argv[])
 	if (!strcmp(argv[1], "init")) {
 		switch (argv[2][4]) {
 		case '1':
-			gsm_init(&uart1);
+			gsm_init("uart1");
 			printf("Init OK\n");
 			break;
 		case '2':
-			gsm_init(&uart2);
+			gsm_init("uart2");
 			printf("Init OK\n");
 			break;
 		case '3':
-			gsm_init(&uart3);
+			gsm_init("uart3");
 			printf("Init OK\n");
 			break;
 		default:
@@ -909,5 +908,5 @@ static int cmd_gsm_func(int argc, char *argv[])
 	return 0;
 }
 const cmd_t cmd_gsm = {"gsm", cmd_gsm_func, "GSM Module debug command"};
-DECLARE_SHELL_CMD(cmd_gsm)
+EXPORT_SHELL_CMD(cmd_gsm)
 #endif
