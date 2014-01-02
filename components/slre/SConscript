@@ -2,7 +2,7 @@ from building import *
 
 cwd     = GetCurrentDir()
 src     = Glob('*.c')
-CPPPATH = cwd
+CPPPATH = [cwd]
 group   = DefineGroup('slre', src, depend = ['CONFIG_USING_SLRE'], CPPPATH = CPPPATH)
 
 Return('group')
