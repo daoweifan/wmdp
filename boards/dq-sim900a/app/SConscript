@@ -13,7 +13,7 @@ if dddp_config.CROSS_TOOL == 'keil':
 else:
     LINKFLAGS = '' 
 
-CPPPATH =CPPPATH + [DDDP_ROOT + '/boards/boot_stm32']
+CPPPATH =CPPPATH + [DDDP_ROOT + '/boards/dq-sim900a']
 CPPPATH =CPPPATH + [DDDP_ROOT + '/include']
 # CPPPATH = CPPPATH + [DDDP_ROOT + '/libcpu/stm32/StdPeriph/inc']
 # CPPPATH = CPPPATH + [DDDP_ROOT + '/libcpu/stm32/cmsis']

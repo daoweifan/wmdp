@@ -65,4 +65,7 @@
 // #define CONFIG_USING_FINSH_UART2    1
 // #define CONFIG_USING_FINSH_UART3    1
 
-
+/*
+ * components slre
+ */
+#define CONFIG_USING_SLRE          1
