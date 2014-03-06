@@ -140,7 +140,7 @@ static void parse_network(char *line)
 	char network[64], *p;
 	struct slre_cap cap;
 
-	if (slre_match("\"+(.*\"*)", line, strlen(line), &cap, 1)) {
+	if (slre_match("\"+(.*\"*)", line, strlen(line), &cap, 1) > 0) {
 		memcpy(network, cap.ptr, cap.len);
 		p = strchr(network,'"');
 		if (p) {
@@ -231,7 +231,7 @@ static Message *lookup_urc_message(const char *line)
 	//const char *error_msg;
 	struct slre_cap caps[4];
 	for(n=0; urc_messages[n].msg; n++) {
-		if (0 != slre_match(urc_messages[n].msg, line, strlen(line), caps, 4)) {
+		if (slre_match(urc_messages[n].msg, line, strlen(line), caps, 4) > 0) {
 			return &urc_messages[n];
 		}
 	}
@@ -311,7 +311,6 @@ int gsm_cmd(const char *cmd)
 		if (gsm.reply != AT_TIMEOUT)
 			break;
 	}
-	gsm.waiting_reply = 0;
 
 	if (gsm.reply != AT_OK)
 		printf("GSM: '%s' failed (%d)\n", cmd, gsm.reply);
@@ -391,7 +390,7 @@ int gsm_wait_cpy(const char *pattern, int timeout, char *line, size_t buf_size)
 			// ENABLE_INTERRUPTS();
 			buf[i++] = c;
 			buf[i] = 0;
-			if (slre_match(pattern, buf, i, caps, 4) != 0) { //Match
+			if (slre_match(pattern, buf, i, caps, 4) > 0) { //Match
 				break;
 			}
 			if (i == 256) //Buffer full, start new

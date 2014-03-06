@@ -37,21 +37,21 @@ int gsm_wait_cpy(const char *pattern, int timeout, char *buf, size_t buf_size); 
 
 void gsm_uart_write(const char *line);
 void gsm_set_power_state(enum Power_mode mode);
-void gsm_reset_modem();
-int gsm_is_gps_ready();         /* Check if GPS flag is set in GSM */
+void gsm_reset_modem(void);
+int gsm_is_gps_ready(void);         /* Check if GPS flag is set in GSM */
 int gsm_read_line(char *buf, int max_len);
 int gsm_read_raw(char *buf, int max_len);
-int gsm_gprs_enable();
-int gsm_gprs_disable();
+int gsm_gprs_enable(void);
+int gsm_gprs_disable(void);
 
 /* Internals */
-void gsm_line_received();
-void gsm_setup_io();
-void gsm_toggle_power_pin();
-void gsm_enable_voltage();
-void gsm_disable_voltage();
-void gsm_set_raw_mode();
-void gsm_disable_raw_mode();
-int gsm_is_raw_mode();
+void gsm_line_received(void);
+void gsm_setup_io(void);
+void gsm_toggle_power_pin(void);
+void gsm_enable_voltage(void);
+void gsm_disable_voltage(void);
+void gsm_set_raw_mode(void);
+void gsm_disable_raw_mode(void);
+int gsm_is_raw_mode(void);
 
 #endif	/* GSM_H */
