@@ -65,7 +65,7 @@ struct gsm_modem {
 static void handle_ok(char *line);
 static void handle_fail(char *line);
 static void handle_error(char *line);
-static void set_hw_flow();
+static void set_hw_flow(void);
 static void parse_cfun(char *line);
 static void gpsready(char *line);
 static void sim_inserted(char *line);
@@ -96,19 +96,19 @@ static Message urc_messages[] = {
 	{ "^\\+CPIN: NOT INSERTED", .next_state=STATE_ERROR,        .func = no_sim },
 	{ "\\+CPIN: READY",         .next_state=STATE_WAIT_NETWORK, .func = sim_inserted },
 	{ "\\+CPIN: SIM PIN",       .next_state=STATE_ASK_PIN,      .func = sim_inserted },
-	{ "\\+CFUN:",                                               .func = parse_cfun },
+	{ "\\+CFUN:",               .next_state=STATE_UNKNOWN,      .func = parse_cfun },
 	{ "Call Ready",             .next_state=STATE_READY },
-	{ "GPS Ready",                                              .func = gpsready },
-	{ "\\+COPS:",                                               .func = parse_network },
-	{ "\\+SAPBR:",                                              .func = parse_sapbr },
-	{ "\\+PDP: DEACT",                                          .func = pdp_off },
+	{ "GPS Ready",              .next_state=STATE_UNKNOWN,      .func = gpsready },
+	{ "\\+COPS:",               .next_state=STATE_UNKNOWN,      .func = parse_network },
+	{ "\\+SAPBR:",              .next_state=STATE_UNKNOWN,      .func = parse_sapbr },
+	{ "\\+PDP: DEACT",          .next_state=STATE_UNKNOWN,      .func = pdp_off },
 	// { "\\+RECEIVE",      .func = socket_receive },
 	/* Return codes */
-	{ "OK",                                                     .func = handle_ok },
-	{ "FAIL",                                                   .func = handle_fail },
-	{ "ERROR",                                                  .func = handle_error },
-	{ "\\+CME ERROR",                                           .func = handle_error },
-	{ "\\+CMS ERROR",                                           .func = handle_error },                       /* TODO: handle */
+	{ "OK",                     .next_state=STATE_UNKNOWN,       .func = handle_ok },
+	{ "FAIL",                   .next_state=STATE_UNKNOWN,       .func = handle_fail },
+	{ "ERROR",                  .next_state=STATE_UNKNOWN,       .func = handle_error },
+	{ "\\+CME ERROR",           .next_state=STATE_UNKNOWN,       .func = handle_error },
+	{ "\\+CMS ERROR",           .next_state=STATE_UNKNOWN,       .func = handle_error },                       /* TODO: handle */
 	/* SOCKET */
 	// { "\\d, CLOSED",    .func = socket_closed },
 	{ NULL } /* Table must end with NULL */
