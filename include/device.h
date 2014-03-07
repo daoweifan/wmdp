@@ -91,6 +91,84 @@ enum device_class_type {
 #define DEVICE_CTRL_RTC_GET_TIME     0x10        /**< get time                                   */
 #define DEVICE_CTRL_RTC_SET_TIME     0x11        /**< set time                                   */
 
+/**
+ * cursor control command
+ */
+#define RT_DEVICE_CTRL_CURSOR_SET_POSITION  0x10
+#define RT_DEVICE_CTRL_CURSOR_SET_TYPE      0x11
+
+/**
+ * graphic device control command
+ */
+#define RTGRAPHIC_CTRL_RECT_UPDATE      0
+#define RTGRAPHIC_CTRL_POWERON          1
+#define RTGRAPHIC_CTRL_POWEROFF         2
+#define RTGRAPHIC_CTRL_GET_INFO         3
+#define RTGRAPHIC_CTRL_SET_MODE         4
+#define RTGRAPHIC_CTRL_GET_EXT          5
+
+/* graphic deice */
+enum
+{
+    RTGRAPHIC_PIXEL_FORMAT_MONO = 0,
+    RTGRAPHIC_PIXEL_FORMAT_GRAY4,
+    RTGRAPHIC_PIXEL_FORMAT_GRAY16,
+    RTGRAPHIC_PIXEL_FORMAT_RGB332,
+    RTGRAPHIC_PIXEL_FORMAT_RGB444,
+    RTGRAPHIC_PIXEL_FORMAT_RGB565,
+    RTGRAPHIC_PIXEL_FORMAT_RGB565P,
+    RTGRAPHIC_PIXEL_FORMAT_BGR565 = RTGRAPHIC_PIXEL_FORMAT_RGB565P,
+    RTGRAPHIC_PIXEL_FORMAT_RGB666,
+    RTGRAPHIC_PIXEL_FORMAT_RGB888,
+    RTGRAPHIC_PIXEL_FORMAT_ARGB888
+};
+
+/**
+ * build a pixel position according to (x, y) coordinates.
+ */
+#define GRAPHIC_PIXEL_POSITION(x, y)  ((x << 16) | y)
+
+/**
+ * graphic device information structure
+ */
+struct device_graphic_info
+{
+    uint8_t  pixel_format;                           /**< graphic format */
+    uint8_t  bits_per_pixel;                         /**< bits per pixel */
+    uint16_t reserved;                               /**< reserved field */
+
+    uint16_t width;                                  /**< width of graphic device */
+    uint16_t height;                                 /**< height of graphic device */
+
+    uint8_t *framebuffer;                            /**< frame buffer */
+};
+
+/**
+ * rectangle information structure
+ */
+struct device_rect_info
+{
+    uint16_t x;                                      /**< x coordinate */
+    uint16_t y;                                      /**< y coordinate */
+    uint16_t width;                                  /**< width */
+    uint16_t height;                                 /**< height */
+};
+
+/**
+ * graphic operations
+ */
+struct device_graphic_ops
+{
+    void (*set_pixel) (const char *pixel, int x, int y);
+    void (*get_pixel) (char *pixel, int x, int y);
+
+    void (*draw_hline)(const char *pixel, int x1, int x2, int y);
+    void (*draw_vline)(const char *pixel, int x, int y1, int y2);
+
+    void (*blit_line) (const char *pixel, int x, int y, size_t size);
+};
+#define graphix_ops(device)          ((struct device_graphic_ops *)(device->user_data))
+
 
 typedef struct device *device_t;
 /**
