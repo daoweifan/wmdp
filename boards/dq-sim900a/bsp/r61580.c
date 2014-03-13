@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "stm32f10x.h"
+#include "os.h"
 #include "r61580.h"
 
 // Compatible list:
@@ -286,23 +287,24 @@ static void lcd_data_bus_test(void)
     }
 }
 
-static unsigned short deviceid=0;
+
 
 void r61580_init(void)
 {
+    unsigned short deviceid=0;
     LCD_FSMCConfig();
     LCD_RST();
 
     deviceid = read_reg(0x00);
 
     /* deviceid check */
-    // if( deviceid != 0x1580 ) {
-        // printf("Invalid LCD ID:%04X\r\n",deviceid);
-        // printf("Please check you hardware and configure.\r\n");
-        // return;
-    // } else {
-        // printf("\r\nLCD Device ID : %04X ",deviceid);
-    // }
+    if((deviceid == 0x1580) || (deviceid == 0xb505)) {
+        printf("\r\nLCD Device ID : %04X ",deviceid);
+    } else {
+        printf("Invalid LCD ID:%04X\r\n",deviceid);
+        printf("Please check you hardware and configure.\r\n");
+        return;
+    }
 
     // Synchronization after reset
     write_reg(0x0000, 0x0000);
@@ -364,8 +366,8 @@ void r61580_init(void)
     //test, used to test the ram access whether success
     lcd_data_bus_test();
 
-    delay(500000);   // Delay 50ms
-    lcd_clear(Red);  //clear screen
+    // delay(500000);   // Delay 50ms
+    // lcd_clear(Red);  //clear screen
 }
 
 /*  set pixel color,X,Y */
@@ -508,103 +510,5 @@ void hw_lcd_init(void)
 	device_register(&lcd_device, "r61580",
 		DEVICE_FLAG_RDWR | DEVICE_FLAG_STANDALONE);
 }
-
-/************* LCD Module debug command **************/
-#if 1
-#include <stdlib.h>
-#include "command.h"
-#include "os.h"
-
-static int cmd_lcd_func(int argc, char *argv[])
-{
-	int color, temp1, temp2, temp3, temp4;
-	const char *usage = { \
-		"usage:\n" \
-		" lcd init                   , initialize lcd module FSMC and lcd controller\n" \
-		" lcd screen color           , clear screen with color(hex or constant)\n" \
-		" lcd vdraw color x y1 y2    , draw vertical line x y1 y2\n" \
-		" lcd hdraw color x1 x2 y    , draw horizontal line x1 x2 y\n" \
-		" lcd rect color x0 x1 y0 y1 , fill rect with color(hex)\n" \
-	};
-	
-	if(argc < 2) {
-		printf(usage);
-		return 0;
-	}
-
-	if (!strcmp(argv[1], "init")) {
-		r61580_init();
-		return 0;
-	}
-
-	if (!strcmp(argv[1], "screen")) {
-		if (deviceid == 0) {
-			r61580_init();
-		}
-		if (!strcmp(argv[2], "White")) {
-			lcd_clear(White);
-		} else if (!strcmp(argv[2], "Black")) {
-			lcd_clear(Black);
-		} else if (!strcmp(argv[2], "Grey")) {
-			lcd_clear(Grey);
-		} else if (!strcmp(argv[2], "Blue")) {
-			lcd_clear(Blue);
-		} else if (!strcmp(argv[2], "Red")) {
-			lcd_clear(Red);
-		} else if (!strcmp(argv[2], "Green")) {
-			lcd_clear(Green);
-		} else if (!strcmp(argv[2], "Yellow")) {
-			lcd_clear(Yellow);
-		} else {
-			if (sscanf(argv[2], "%x", &color) > 0)
-				lcd_clear((unsigned short)color);
-			else
-				printf("Color Error\n");
-		}
-		return 0;
-	}
-
-	if (!strcmp(argv[1], "vdraw")) {
-		if (deviceid == 0) {
-			r61580_init();
-		}
-		color = atoi(argv[2]);
-		temp1 = atoi(argv[3]);
-		temp2 = atoi(argv[4]);
-		temp3 = atoi(argv[5]);
-		r61580_draw_vline(&color, temp1, temp2, temp3);
-		return 0;
-	}
-
-	if (!strcmp(argv[1], "hdraw")) {
-		if (deviceid == 0) {
-			r61580_init();
-		}
-		color = atoi(argv[2]);
-		temp1 = atoi(argv[3]);
-		temp2 = atoi(argv[4]);
-		temp3 = atoi(argv[5]);
-		r61580_draw_hline(&color, temp1, temp2, temp3);
-		return 0;
-	}
-
-
-	if (!strcmp(argv[1], "rect")) {
-		if (deviceid == 0) {
-			r61580_init();
-		}
-		sscanf(argv[2], "%x", &color);
-		temp1 = atoi(argv[3]);
-		temp2 = atoi(argv[4]);
-		temp3 = atoi(argv[5]);
-		temp4 = atoi(argv[6]);
-		r61580_fill_rect(&color, temp1, temp2, temp3, temp4);
-		return 0;
-	}
-
-	return 0;
-}
-const cmd_t cmd_lcd = {"lcd", cmd_lcd_func, "LCD Module debug command"};
-EXPORT_SHELL_CMD(cmd_lcd)
-#endif
-
+/* put this function in driver init section */
+EXPORT_BOARD_INIT(hw_lcd_init)

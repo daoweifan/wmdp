@@ -92,48 +92,20 @@ enum device_class_type {
 #define DEVICE_CTRL_RTC_SET_TIME     0x11        /**< set time                                   */
 
 /**
- * cursor control command
- */
-#define RT_DEVICE_CTRL_CURSOR_SET_POSITION  0x10
-#define RT_DEVICE_CTRL_CURSOR_SET_TYPE      0x11
-
-/**
  * graphic device control command
  */
-#define RTGRAPHIC_CTRL_RECT_UPDATE      0
-#define RTGRAPHIC_CTRL_POWERON          1
-#define RTGRAPHIC_CTRL_POWEROFF         2
-#define RTGRAPHIC_CTRL_GET_INFO         3
-#define RTGRAPHIC_CTRL_SET_MODE         4
-#define RTGRAPHIC_CTRL_GET_EXT          5
-
-/* graphic deice */
-enum
-{
-    RTGRAPHIC_PIXEL_FORMAT_MONO = 0,
-    RTGRAPHIC_PIXEL_FORMAT_GRAY4,
-    RTGRAPHIC_PIXEL_FORMAT_GRAY16,
-    RTGRAPHIC_PIXEL_FORMAT_RGB332,
-    RTGRAPHIC_PIXEL_FORMAT_RGB444,
-    RTGRAPHIC_PIXEL_FORMAT_RGB565,
-    RTGRAPHIC_PIXEL_FORMAT_RGB565P,
-    RTGRAPHIC_PIXEL_FORMAT_BGR565 = RTGRAPHIC_PIXEL_FORMAT_RGB565P,
-    RTGRAPHIC_PIXEL_FORMAT_RGB666,
-    RTGRAPHIC_PIXEL_FORMAT_RGB888,
-    RTGRAPHIC_PIXEL_FORMAT_ARGB888
-};
-
-/**
- * build a pixel position according to (x, y) coordinates.
- */
-#define GRAPHIC_PIXEL_POSITION(x, y)  ((x << 16) | y)
+#define GRAPHIC_CTRL_RECT_UPDATE      0
+#define GRAPHIC_CTRL_POWERON          1
+#define GRAPHIC_CTRL_POWEROFF         2
+#define GRAPHIC_CTRL_GET_INFO         3
+#define GRAPHIC_CTRL_SET_MODE         4
+#define GRAPHIC_CTRL_GET_EXT          5
 
 /**
  * graphic device information structure
  */
 struct device_graphic_info
 {
-    uint8_t  pixel_format;                           /**< graphic format */
     uint8_t  bits_per_pixel;                         /**< bits per pixel */
     uint16_t reserved;                               /**< reserved field */
 
@@ -159,13 +131,14 @@ struct device_rect_info
  */
 struct device_graphic_ops
 {
-    void (*set_pixel) (const char *pixel, int x, int y);
-    void (*get_pixel) (char *pixel, int x, int y);
+    void (*set_pixel) (const void *pixel, int x, int y);
+    void (*get_pixel) (void *pixel, int x, int y);
 
-    void (*draw_hline)(const char *pixel, int x1, int x2, int y);
-    void (*draw_vline)(const char *pixel, int x, int y1, int y2);
+    void (*draw_hline)(const void *pixel, int x1, int x2, int y);
+    void (*draw_vline)(const void *pixel, int x, int y1, int y2);
+    void (*fill_rect) (const void *pixel, int x0, int y0, int x1, int y1);
 
-    void (*blit_line) (const char *pixel, int x, int y, size_t size);
+    void (*blit_line) (const void *pixel, int x, int y, size_t size);
 };
 #define graphix_ops(device)          ((struct device_graphic_ops *)(device->user_data))
 
