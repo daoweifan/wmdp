@@ -3,7 +3,7 @@ import os
 # toolchains options
 ARCH='cortex-m3'
 CPU='stm32f10x'
-CROSS_TOOL='keil'
+CROSS_TOOL='iar'
 
 if os.getenv('WM_CC'):
 	CROSS_TOOL = os.getenv('WM_CC')
@@ -31,7 +31,7 @@ elif CROSS_TOOL == 'keil':
 	EXEC_PATH 	= 'C:/Keil'
 elif CROSS_TOOL == 'iar':
 	PLATFORM 	= 'iar'
-	IAR_PATH 	= 'C:/Program Files/IAR Systems/Embedded Workbench 6.0'
+	IAR_PATH 	= 'C:/Program Files (x86)/IAR Systems/Embedded Workbench 6.0'
 
 if os.getenv('RTT_EXEC_PATH'):
 	EXEC_PATH = os.getenv('RTT_EXEC_PATH')
@@ -82,7 +82,7 @@ elif PLATFORM == 'armcc':
     CFLAGS += ' -I' + EXEC_PATH + '/ARM/RV31/INC'
     LFLAGS += ' --libpath ' + EXEC_PATH + '/ARM/RV31/LIB'
 
-    EXEC_PATH += '/arm/bin40/'
+    EXEC_PATH += '/ARM/ARMCC/bin/'
 
     if BUILD == 'debug':
         CFLAGS += ' -g -O0'
