@@ -303,63 +303,7 @@ void r61580_init(void)
     // } else {
         // printf("\r\nLCD Device ID : %04X ",deviceid);
     // }
-#if 0
-    // Synchronization after reset
-    write_reg(0x0000, 0x0000);
-    write_reg(0x0000, 0x0000);
-    write_reg(0x0000, 0x0000);
-    write_reg(0x0000, 0x0000);
-    write_reg(0x00A4, 0x0001);  // CALB=1
-    delay(50);
-    write_reg(0x0060, 0xA700);  // Driver Output Control
-    write_reg(0x0008, 0x0404);  // Display Control BP=8, FP=8
 
-    write_reg(0x0030, 0x0C00);  //gamma
-    write_reg(0x0031, 0x5B0A);
-    write_reg(0x0032, 0x0804);
-    write_reg(0x0033, 0x1017);
-    write_reg(0x0034, 0x2300);
-    write_reg(0x0035, 0x1700);
-    write_reg(0x0036, 0x6309);
-    write_reg(0x0037, 0x0C0C);
-    write_reg(0x0038, 0x100C);
-    write_reg(0x0039, 0x2232);
-                      
-    write_reg(0x0090, 0x0019);  //70Hz
-    write_reg(0x0010, 0x0530);  //BT,AP
-    write_reg(0x0011, 0x0237);  //DC1,DC0,VC
-    write_reg(0x0012, 0x01BC);
-    write_reg(0x0013, 0x1B00);
-    delay(50);        
-                      
-    write_reg(0x0001, 0x0100);
-    write_reg(0x0002, 0x0200);
-    write_reg(0x0003, 0x1030);
-    write_reg(0x0009, 0x002F);
-    write_reg(0x000A, 0x0008);
-    write_reg(0x000C, 0x0000);
-    write_reg(0x000D, 0xD000);
-    write_reg(0x000E, 0x0030);
-    write_reg(0x000F, 0x0000);
-    write_reg(0x0020, 0x0000);  //H Start
-    write_reg(0x0021, 0x0000);  //V Start
-    write_reg(0x0029, 0x0061);
-    write_reg(0x0050, 0x0000);
-    write_reg(0x0051, 0xD0EF);
-    write_reg(0x0052, 0x0000);
-    write_reg(0x0053, 0x013F);
-    write_reg(0x0061, 0x0001);
-    write_reg(0x006A, 0x0000);
-    write_reg(0x0080, 0x0000);
-    write_reg(0x0081, 0x0000);
-    write_reg(0x0082, 0x005F);
-    write_reg(0x0093, 0x0701);
-                      
-    write_reg(0x0007, 0x0100);
-    write_reg(0x0000, 0x22);
-#endif
-
-#if 1
     // Synchronization after reset
     write_reg(0x0000, 0x0000);
     write_reg(0x0000, 0x0000);
@@ -416,7 +360,6 @@ void r61580_init(void)
     write_reg(0x0093, 0x0701);
     write_reg(0x0007, 0x0100);
     write_reg(0x0022, 0x0000);
-#endif
 
     //test, used to test the ram access whether success
     lcd_data_bus_test();
@@ -426,46 +369,50 @@ void r61580_init(void)
 }
 
 /*  set pixel color,X,Y */
-void r61580_set_pixel(unsigned int pixel, int x, int y)
+static void r61580_set_pixel(const void *pixel, int x, int y)
 {
+    unsigned short *pp = (unsigned short *)pixel;
     lcd_SetCursor(x, y);
-    write_data(pixel);
+    write_data(*pp);
 }
 
 /* get pixel color */
-uint16_t r61580_get_pixel(int x, int y)
+static void r61580_get_pixel(void *pixel, int x, int y)
 {
-    return lcd_read_gram(x, y);
+    unsigned short *pp = (unsigned short *)pixel;
+    *pp = lcd_read_gram(x, y);
 }
 
 /* draw horizontal line */
-void r61580_draw_hline(unsigned int pixel, int x1, int x2, int y)
+static void r61580_draw_hline(const void *pixel, int x1, int x2, int y)
 {
+    unsigned short *pp = (unsigned short *)pixel;
     /* [5:4]-ID~ID0 [3]-AM, 1:vertical, 0:horizontal-0 */
     write_reg(0x0003,0x1030 | (0<<3)); // AM=0 hline
     lcd_SetCursor(x1, y);
     rw_data_prepare(); /* Prepare to write GRAM */
     while (x1 < x2) {
-        write_data(pixel);
+        write_data(*pp);
         x1++;
     }
 }
 
 /* draw vertical line */
-void r61580_draw_vline(unsigned short pixel, int x, int y1, int y2)
+static void r61580_draw_vline(const void *pixel, int x, int y1, int y2)
 {
+    unsigned short *pp = (unsigned short *)pixel;
     /* [5:4]-ID~ID0 [3]-AM, 1:vertical, 0:horizontal-0 */
     write_reg(0x0003,0x1030 | (1<<3)); // AM=1 vline
     lcd_SetCursor(x, y1);
     rw_data_prepare(); /* Prepare to write GRAM */
     while (y1 < y2) {
-        write_data(pixel);
+        write_data(*pp);
         y1++;
     }
 }
 
 /* fill rect area */
-void r61580_fill_rect(unsigned short pixel, int x0, int y0, int x1, int y1)
+static void r61580_fill_rect(const void *pixel, int x0, int y0, int x1, int y1)
 {
     while(y0 < y1) {
         r61580_draw_hline(pixel, x0, x1, y0);
@@ -475,11 +422,9 @@ void r61580_fill_rect(unsigned short pixel, int x0, int y0, int x1, int y1)
 
 
 /* blit a line */
-void r61580_blit_line(const char* pixels, int x, int y, size_t size)
+static void r61580_blit_line(const void* pixel, int x, int y, size_t size)
 {
-	uint16_t *ptr;
-
-	ptr = (uint16_t*)pixels;
+    uint16_t *pp = (uint16_t*)pixel;
 
     /* [5:4]-ID~ID0 [3]-AM, 1:vertical, 0:horizontal-0 */
     write_reg(0x0003,0x1030 | (0<<3)); // AM=0 hline
@@ -487,57 +432,54 @@ void r61580_blit_line(const char* pixels, int x, int y, size_t size)
     lcd_SetCursor(x, y);
     rw_data_prepare(); /* Prepare to write GRAM */
     while (size) {
-        write_data(*ptr ++);
+        write_data(*pp ++);
         size --;
     }
 }
 
-#if 0
-struct rt_device_graphic_ops ssd1289_ops =
+static struct device_graphic_ops r61580_ops =
 {
-	ssd1289_lcd_set_pixel,
-	ssd1289_lcd_get_pixel,
-	ssd1289_lcd_draw_hline,
-	ssd1289_lcd_draw_vline,
-	ssd1289_lcd_blit_line
+	.set_pixel = r61580_set_pixel,
+	.get_pixel = r61580_get_pixel,
+	.draw_hline = r61580_draw_hline,
+	.draw_vline = r61580_draw_vline,
+	.fill_rect = r61580_fill_rect,
+	.blit_line = r61580_blit_line
 };
 
-struct rt_device lcd_device;
-static rt_err_t lcd_init(rt_device_t dev)
+static struct device lcd_device;
+static err_t lcd_init(device_t dev)
 {
-	return RT_EOK;
+	return ERROR_EOK;
 }
 
-static rt_err_t lcd_open(rt_device_t dev, rt_uint16_t oflag)
+static err_t lcd_open(device_t dev, uint16_t oflag)
 {
-	return RT_EOK;
+	return ERROR_EOK;
 }
 
-static rt_err_t lcd_close(rt_device_t dev)
+static err_t lcd_close(device_t dev)
 {
-	return RT_EOK;
+	return ERROR_EOK;
 }
 
-static rt_err_t lcd_control(rt_device_t dev, rt_uint8_t cmd, void *args)
+static err_t lcd_control(device_t dev, uint8_t cmd, void *args)
 {
-	switch (cmd)
-	{
-	case RTGRAPHIC_CTRL_GET_INFO:
+	switch (cmd) {
+	case GRAPHIC_CTRL_GET_INFO:
 		{
-			struct rt_device_graphic_info *info;
+			struct device_graphic_info *info;
 
-			info = (struct rt_device_graphic_info*) args;
-			RT_ASSERT(info != RT_NULL);
+			info = (struct device_graphic_info*) args;
 
 			info->bits_per_pixel = 16;
-			info->pixel_format = RTGRAPHIC_PIXEL_FORMAT_RGB565P;
-			info->framebuffer = RT_NULL;
+			info->framebuffer = NULL;
 			info->width = 240;
 			info->height = 320;
 		}
 		break;
 
-	case RTGRAPHIC_CTRL_RECT_UPDATE:
+	case GRAPHIC_CTRL_RECT_UPDATE:
 		/* nothong to be done */
 		break;
 
@@ -545,46 +487,27 @@ static rt_err_t lcd_control(rt_device_t dev, rt_uint8_t cmd, void *args)
 		break;
 	}
 
-	return RT_EOK;
+	return ERROR_EOK;
 }
 
-void rt_hw_lcd_init(void)
+void hw_lcd_init(void)
 {
-    /* LCD RESET */
-    /* PF10 : LCD RESET */
-    {
-        GPIO_InitTypeDef GPIO_InitStructure;
-
-        RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOF, ENABLE);
-
-        GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_PP;
-        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
-        GPIO_Init(GPIOF,&GPIO_InitStructure);
-
-        GPIO_ResetBits(GPIOF,GPIO_Pin_10);
-        GPIO_SetBits(GPIOF,GPIO_Pin_10);
-        /* wait for lcd reset */
-        rt_thread_delay(1);
-    }
-
 	/* register lcd device */
-	_lcd_device.type  = RT_Device_Class_Graphic;
-	_lcd_device.init  = lcd_init;
-	_lcd_device.open  = lcd_open;
-	_lcd_device.close = lcd_close;
-	_lcd_device.control = lcd_control;
-	_lcd_device.read  = RT_NULL;
-	_lcd_device.write = RT_NULL;
+	lcd_device.type  = Device_Class_Graphic;
+	lcd_device.init  = lcd_init;
+	lcd_device.open  = lcd_open;
+	lcd_device.close = lcd_close;
+	lcd_device.control = lcd_control;
+	lcd_device.read  = NULL;
+	lcd_device.write = NULL;
 
-	_lcd_device.user_data = &ssd1289_ops;
-    ssd1289_init();
+	lcd_device.user_data = &r61580_ops;
+    r61580_init();
 
     /* register graphic device driver */
-	rt_device_register(&_lcd_device, "lcd",
-		RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_STANDALONE);
+	device_register(&lcd_device, "r61580",
+		DEVICE_FLAG_RDWR | DEVICE_FLAG_STANDALONE);
 }
-#endif
 
 /************* LCD Module debug command **************/
 #if 1
@@ -649,7 +572,7 @@ static int cmd_lcd_func(int argc, char *argv[])
 		temp1 = atoi(argv[3]);
 		temp2 = atoi(argv[4]);
 		temp3 = atoi(argv[5]);
-		r61580_draw_vline(color, temp1, temp2, temp3);
+		r61580_draw_vline(&color, temp1, temp2, temp3);
 		return 0;
 	}
 
@@ -661,7 +584,7 @@ static int cmd_lcd_func(int argc, char *argv[])
 		temp1 = atoi(argv[3]);
 		temp2 = atoi(argv[4]);
 		temp3 = atoi(argv[5]);
-		r61580_draw_hline(color, temp1, temp2, temp3);
+		r61580_draw_hline(&color, temp1, temp2, temp3);
 		return 0;
 	}
 
@@ -675,7 +598,7 @@ static int cmd_lcd_func(int argc, char *argv[])
 		temp2 = atoi(argv[4]);
 		temp3 = atoi(argv[5]);
 		temp4 = atoi(argv[6]);
-		r61580_fill_rect(color, temp1, temp2, temp3, temp4);
+		r61580_fill_rect(&color, temp1, temp2, temp3, temp4);
 		return 0;
 	}
 
