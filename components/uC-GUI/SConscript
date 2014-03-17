@@ -343,9 +343,15 @@ LCDDriver_src = Split("""
 GUI/LCDDriver/AsciiLib_65k.c
 GUI/LCDDriver/HzLib_65k.c
 GUI/LCDDriver/LCDDummy.c
-GUI/LCDDriver/LCDMini2440.c
 GUI/LCDDriver/LCDNull.c
 GUI/LCDDriver/LCDWin.c
+""")
+
+LCDDriver_LCDMini2440 = Split("""
+GUI/LCDDriver/LCDMini2440.c
+""")
+
+LCDDriver_ili9320 = Split("""
 GUI/LCDDriver/ili9320.c
 GUI/LCDDriver/ili9320_api.c
 GUI/LCDDriver/ili9320_touch.c
@@ -700,11 +706,12 @@ subcwd  = GetCurrentDir() + '/GUI'
 sublist = os.listdir(subcwd)
 path = sublist
 
-# if GetDepend(['RT_MODBUS_MASTER_RTU']):
-    # src += master_rtu_src
+# Select the lcd device driver
+if GetDepend(['CONFIG_USING_UCGUI_ILI9320']):
+    LCDDriver_src += LCDDriver_ili9320
 
-# if GetDepend(['RT_MODBUS_SLAVE_RTU']):
-    # src += slave_rtu_src
+if GetDepend(['CONFIG_USING_UCGUI_LCDMini2440']):
+    LCDDriver_src += LCDDriver_LCDMini2440
 
 # if GetDepend(['RT_MODBUS_MASTER_SLAVE_RTU']):
     # src += master_slave_rtu_src
