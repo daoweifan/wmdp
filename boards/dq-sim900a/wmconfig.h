@@ -66,11 +66,16 @@
 // #define CONFIG_USING_FINSH_UART3    1
 
 /*
+ * components ucgui
+ */
+#define CONFIG_USING_UCGUI          1
+
+/*
  * components slre
  */
 #define CONFIG_USING_SLRE          1
 
 /*
- * components
+ * bsp
  */
 #define CONFIG_USING_SIM900A       1
