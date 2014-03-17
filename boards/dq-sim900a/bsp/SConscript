@@ -3,7 +3,7 @@ from building import *
 cwd     = GetCurrentDir()
 # src     = Glob('*.c')
 src     = ['sim900a.c', 'r61580.c', 'cmd_lcd.c']
-CPPPATH = cwd
+CPPPATH = [cwd]
 group   = DefineGroup('bsp', src, depend = ['CONFIG_USING_SIM900A'], CPPPATH = CPPPATH)
 
 Return('group')

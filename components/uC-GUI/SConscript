@@ -702,9 +702,12 @@ GUI/WM/WM__UpdateChildPositions.c
 """)
 
 # The set of source files associated with this SConscript file.
-subcwd  = GetCurrentDir() + '/GUI'
+subcwd  = GetCurrentDir() + '\\GUI'
 sublist = os.listdir(subcwd)
-path = sublist
+path = []
+for item in sublist:
+    path.append(subcwd + '\\' + item)
+# print path
 
 # Select the lcd device driver
 if GetDepend(['CONFIG_USING_UCGUI_ILI9320']):
@@ -713,10 +716,10 @@ if GetDepend(['CONFIG_USING_UCGUI_ILI9320']):
 if GetDepend(['CONFIG_USING_UCGUI_LCDMini2440']):
     LCDDriver_src += LCDDriver_LCDMini2440
 
-# if GetDepend(['RT_MODBUS_MASTER_SLAVE_RTU']):
-    # src += master_slave_rtu_src
-
-src = OS_src
+# source file contorl
+src = []
+if GetDepend(['CONFIG_USING_UCGUI_OS']):
+    src += OS_src
 src += AntiAlias_src
 src += ConvertColor_src
 src += ConvertMono_src
