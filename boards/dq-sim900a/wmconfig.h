@@ -69,6 +69,17 @@
  * components ucgui
  */
 #define CONFIG_USING_UCGUI          1
+#define CONFIG_USING_UCGUI_R61580   1
+// #define CONFIG_USING_UCGUI_OS      1
+// #define CONFIG_USING_UCGUI_AntiAlias    1
+// #define CONFIG_USING_UCGUI_ConvertColor    1
+// #define CONFIG_USING_UCGUI_ConvertMono    1
+// #define CONFIG_USING_UCGUI_JPEG    1
+// #define CONFIG_USING_UCGUI_WM    1
+// #define CONFIG_USING_UCGUI_Widget    1
+// #define CONFIG_USING_UCGUI_MemDev    1
+// #define CONFIG_USING_UCGUI_ILI9320  1
+// #define CONFIG_USING_UCGUI_LCDMini2440  1
 
 /*
  * components slre

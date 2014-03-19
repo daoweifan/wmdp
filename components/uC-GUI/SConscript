@@ -3,9 +3,13 @@ Import('wmconfig')
 import os
 from building import *
 
-OS_src = Split("""
+GUI_X_OS_src = Split("""
 GUI_X_Touch.c
 GUI_X_uCOS.c
+""")
+
+GUI_X_src = Split("""
+GUI_X.c
 """)
 
 AntiAlias_src = Split("""
@@ -339,15 +343,15 @@ GUI/JPEG/jquant2.c
 GUI/JPEG/jutils.c
 """)
 
-LCDDriver_src = Split("""
-GUI/LCDDriver/AsciiLib_65k.c
-GUI/LCDDriver/HzLib_65k.c
+LCDDriver_Dummy = Split("""
 GUI/LCDDriver/LCDDummy.c
-GUI/LCDDriver/LCDNull.c
-GUI/LCDDriver/LCDWin.c
 """)
 
-LCDDriver_LCDMini2440 = Split("""
+LCDDriver_R61580 = Split("""
+GUI/LCDDriver/LCDR61580.c
+""")
+
+LCDDriver_Mini2440 = Split("""
 GUI/LCDDriver/LCDMini2440.c
 """)
 
@@ -709,28 +713,44 @@ for item in sublist:
     path.append(subcwd + '\\' + item)
 # print path
 
+LCDDriver_src = []
 # Select the lcd device driver
 if GetDepend(['CONFIG_USING_UCGUI_ILI9320']):
     LCDDriver_src += LCDDriver_ili9320
+elif GetDepend(['CONFIG_USING_UCGUI_Mini2440']):
+    LCDDriver_src += LCDDriver_Mini2440
+elif GetDepend(['CONFIG_USING_UCGUI_R61580']):
+    LCDDriver_src += LCDDriver_R61580
+else:
+    LCDDriver_src += LCDDriver_Dummy
 
-if GetDepend(['CONFIG_USING_UCGUI_LCDMini2440']):
-    LCDDriver_src += LCDDriver_LCDMini2440
+
 
 # source file contorl
 src = []
-if GetDepend(['CONFIG_USING_UCGUI_OS']):
-    src += OS_src
-src += AntiAlias_src
-src += ConvertColor_src
-src += ConvertMono_src
 src += Core_src
 src += Font_src
-src += JPEG_src
 src += LCDDriver_src
-src += MemDev_src
-src += MultiLayer_src
-src += WM_src
-src += Widget_src
+if GetDepend(['CONFIG_USING_UCGUI_OS']):
+    src += GUI_X_OS_src
+else:
+    src += GUI_X_src
+if GetDepend(['CONFIG_USING_UCGUI_AntiAlias']):
+    src += AntiAlias_src
+if GetDepend(['CONFIG_USING_UCGUI_ConvertColor']):
+    src += ConvertColor_src
+if GetDepend(['CONFIG_USING_UCGUI_ConvertMono']):
+    src += ConvertMono_src
+if GetDepend(['CONFIG_USING_UCGUI_JPEG']):
+    src += JPEG_src
+if GetDepend(['CONFIG_USING_UCGUI_MemDev']):
+    src += MemDev_src
+if GetDepend(['CONFIG_USING_UCGUI_MultiLayer']):
+    src += MultiLayer_src
+if GetDepend(['CONFIG_USING_UCGUI_WM']):
+    src += WM_src
+if GetDepend(['CONFIG_USING_UCGUI_Widget']):
+    src += Widget_src
 
 group = DefineGroup('UCGUI', src, depend = ['CONFIG_USING_UCGUI'], CPPPATH = path)
 
