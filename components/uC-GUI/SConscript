@@ -731,27 +731,63 @@ src = []
 src += Core_src
 src += Font_src
 src += LCDDriver_src
-if GetDepend(['CONFIG_USING_UCGUI_OS']):
+
+group_core = DefineGroup('UCGUI_Core', Core_src, depend = ['CONFIG_USING_UCGUI'], CPPPATH = path)
+group_font = DefineGroup('UCGUI_Font', Font_src, depend = ['CONFIG_USING_UCGUI'], CPPPATH = [])
+group_driver = DefineGroup('UCGUI_Driver', LCDDriver_src, depend = ['CONFIG_USING_UCGUI'], CPPPATH = [])
+# group_WM = DefineGroup('UCGUI_WM', WM_src, depend = ['CONFIG_USING_UCGUI_WM'], CPPPATH = [])
+
+if GetDepend('CONFIG_USING_UCGUI_OS'):
     src += GUI_X_OS_src
+    group_gui_x = DefineGroup('UCGUI_GUI_X', GUI_X_OS_src, depend = [], CPPPATH = [])
+    # Return('group_gui_x')
 else:
     src += GUI_X_src
-if GetDepend(['CONFIG_USING_UCGUI_AntiAlias']):
+    group_gui_x = DefineGroup('UCGUI_GUI_X', GUI_X_src, depend = [], CPPPATH = [])
+    # Return('group_gui_x')
+
+if GetDepend('CONFIG_USING_UCGUI_AntiAlias'):
     src += AntiAlias_src
-if GetDepend(['CONFIG_USING_UCGUI_ConvertColor']):
+    group_antiAlias = DefineGroup('UCGUI_AntiAlias', AntiAlias_src, depend = [], CPPPATH = [])
+    Return('group_antiAlias')
+
+if GetDepend('CONFIG_USING_UCGUI_ConvertColor'):
     src += ConvertColor_src
-if GetDepend(['CONFIG_USING_UCGUI_ConvertMono']):
+    group_convertcolor = DefineGroup('UCGUI_ConvertColor', ConvertColor_src, depend = [], CPPPATH = [])
+    Return('group_convertcolor')
+
+if GetDepend('CONFIG_USING_UCGUI_ConvertMono'):
     src += ConvertMono_src
-if GetDepend(['CONFIG_USING_UCGUI_JPEG']):
+    group_ConvertMono = DefineGroup('UCGUI_ConvertMono', ConvertMono_src, depend = [], CPPPATH = [])
+    Return('group_ConvertMono')
+
+if GetDepend('CONFIG_USING_UCGUI_JPEG'):
     src += JPEG_src
-if GetDepend(['CONFIG_USING_UCGUI_MemDev']):
+    group_JPEG = DefineGroup('UCGUI_JPEG', JPEG_src, depend = [], CPPPATH = [])
+    Return('group_JPEG')
+
+if GetDepend('CONFIG_USING_UCGUI_MemDev'):
     src += MemDev_src
-if GetDepend(['CONFIG_USING_UCGUI_MultiLayer']):
+    group_MemDev = DefineGroup('UCGUI_MemDev', MemDev_src, depend = [], CPPPATH = [])
+    Return('group_MemDev')
+
+if GetDepend('CONFIG_USING_UCGUI_MultiLayer'):
     src += MultiLayer_src
-if GetDepend(['CONFIG_USING_UCGUI_WM']):
+    group_MultiLayer = DefineGroup('UCGUI_MultiLayer', MultiLayer_src, depend = [], CPPPATH = [])
+    Return('group_MultiLayer')
+
+if GetDepend('CONFIG_USING_UCGUI_WM'):
     src += WM_src
-if GetDepend(['CONFIG_USING_UCGUI_Widget']):
+    group_WM = DefineGroup('UCGUI_WM', WM_src, depend = [], CPPPATH = [])
+    # Return('group_WM')
+
+if GetDepend('CONFIG_USING_UCGUI_Widget'):
     src += Widget_src
+    group_Widget = DefineGroup('UCGUI_Widget', Widget_src, depend = [], CPPPATH = [])
+    Return('group_Widget')
 
-group = DefineGroup('UCGUI', src, depend = ['CONFIG_USING_UCGUI'], CPPPATH = path)
-
-Return('group')
+Return('group_gui_x')
+Return('group_WM')
+Return('group_core')
+Return('group_font')
+Return('group_driver')

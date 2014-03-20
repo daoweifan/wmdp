@@ -75,7 +75,7 @@
 // #define CONFIG_USING_UCGUI_ConvertColor    1
 // #define CONFIG_USING_UCGUI_ConvertMono    1
 // #define CONFIG_USING_UCGUI_JPEG    1
-// #define CONFIG_USING_UCGUI_WM    1
+#define CONFIG_USING_UCGUI_WM    1
 // #define CONFIG_USING_UCGUI_Widget    1
 // #define CONFIG_USING_UCGUI_MemDev    1
 // #define CONFIG_USING_UCGUI_ILI9320  1
