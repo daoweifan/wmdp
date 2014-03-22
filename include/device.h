@@ -131,13 +131,16 @@ struct device_rect_info
  */
 struct device_graphic_ops
 {
+    /* low level driver, not neccessary */
+    void (*set_window) (int x0, int y0, int x1, int y1);
+    void (*write_ram) (const void *pixel);
+
     void (*set_pixel) (const void *pixel, int x, int y);
     void (*get_pixel) (void *pixel, int x, int y);
-
     void (*draw_hline)(const void *pixel, int x1, int x2, int y);
     void (*draw_vline)(const void *pixel, int x, int y1, int y2);
     void (*fill_rect) (const void *pixel, int x0, int y0, int x1, int y1);
-
+    void (*draw_rect) (const void *pixel, int x0, int y0, int xsize, int ysize);
     void (*blit_line) (const void *pixel, int x, int y, size_t size);
 };
 #define graphix_ops(device)          ((struct device_graphic_ops *)(device->user_data))

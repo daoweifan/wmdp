@@ -28,6 +28,7 @@
 
 /************* LCD Module debug command **************/
 static device_t lcd = NULL;
+// extern const unsigned short acwendy;
 static int cmd_lcd_func(int argc, char *argv[])
 {
 	int color, temp1, temp2, temp3, temp4;
@@ -41,6 +42,7 @@ static int cmd_lcd_func(int argc, char *argv[])
 		" lcd vdraw color x y1 y2    , draw vertical line x y1 y2\n" \
 		" lcd hdraw color x1 x2 y    , draw horizontal line x1 x2 y\n" \
 		" lcd rect color x0 y0 x1 y1 , fill rect with color(hex)\n" \
+		" lcd draw wendy xsize ysize , draw a bitmap picture 16bits\n" \
 	};
 	
 	if(argc < 2) {
@@ -105,6 +107,18 @@ static int cmd_lcd_func(int argc, char *argv[])
 		temp4 = atoi(argv[6]);
 		lcd_ops = (struct device_graphic_ops *)lcd->user_data;
 		lcd_ops->fill_rect(&color, temp1, temp2, temp3, temp4);
+		return 0;
+	}
+
+	if (!strcmp(argv[1], "draw")) {
+		if (lcd == NULL) {
+			printf("There is no device init");
+			return 0;
+		}
+		temp1 = atoi(argv[3]);
+		temp2 = atoi(argv[4]);
+		lcd_ops = (struct device_graphic_ops *)lcd->user_data;
+		// lcd_ops->draw_rect((void const *)acwendy, 0, 0, temp1, temp2);
 		return 0;
 	}
 

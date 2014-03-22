@@ -234,7 +234,7 @@ lcd_inline unsigned short read_reg(unsigned char reg_addr)
     return (val);
 }
 
-static void lcd_SetCursor(unsigned int x,unsigned int y)
+lcd_inline void lcd_SetCursor(unsigned int x,unsigned int y)
 {
     write_reg(0x0020, x);    /* 0-239 */
     write_reg(0x0021, y);    /* 0-319 */
@@ -250,16 +250,6 @@ static unsigned short lcd_read_gram(unsigned int x,unsigned int y)
     temp = read_data();
     temp = read_data();
     return temp;
-}
-
-static void lcd_clear(unsigned short Color)
-{
-    unsigned int index=0;
-    lcd_SetCursor(0,0);
-    rw_data_prepare();                      /* Prepare to write GRAM */
-    for (index=0; index < (LCD_WIDTH*LCD_HEIGHT); index++) {
-        write_data(Color);
-    }
 }
 
 static void lcd_data_bus_test(void)
@@ -375,6 +365,7 @@ static void r61580_set_pixel(const void *pixel, int x, int y)
 {
     unsigned short *pp = (unsigned short *)pixel;
     lcd_SetCursor(x, y);
+    rw_data_prepare();
     write_data(*pp);
 }
 
@@ -391,6 +382,11 @@ static void r61580_draw_hline(const void *pixel, int x1, int x2, int y)
     unsigned short *pp = (unsigned short *)pixel;
     /* [5:4]-ID~ID0 [3]-AM, 1:vertical, 0:horizontal-0 */
     write_reg(0x0003,0x1030 | (0<<3)); // AM=0 hline
+    write_reg(0x0050, 0);
+    write_reg(0x0051, 239);
+    write_reg(0x0052, 0);
+    write_reg(0x0053, 319);
+
     lcd_SetCursor(x1, y);
     rw_data_prepare(); /* Prepare to write GRAM */
     while (x1 < x2) {
@@ -405,6 +401,11 @@ static void r61580_draw_vline(const void *pixel, int x, int y1, int y2)
     unsigned short *pp = (unsigned short *)pixel;
     /* [5:4]-ID~ID0 [3]-AM, 1:vertical, 0:horizontal-0 */
     write_reg(0x0003,0x1030 | (1<<3)); // AM=1 vline
+    write_reg(0x0050, 0);
+    write_reg(0x0051, 239);
+    write_reg(0x0052, 0);
+    write_reg(0x0053, 319);
+
     lcd_SetCursor(x, y1);
     rw_data_prepare(); /* Prepare to write GRAM */
     while (y1 < y2) {
@@ -413,15 +414,70 @@ static void r61580_draw_vline(const void *pixel, int x, int y1, int y2)
     }
 }
 
+static void r61580_write_data(const void *pixel)
+{
+    LCD_RAM = *((unsigned short *)pixel);
+}
+
+/* set window for lcd ram direct write */
+static void r61580_set_window (int x0, int y0, int x1, int y1)
+{
+    /* [5:4]-ID~ID0 [3]-AM, 1:vertical, 0:horizontal-0 */
+    write_reg(0x0003,0x1030 | (0<<3)); // AM=0 hline
+    write_reg(0x0050, x0);
+    write_reg(0x0051, x1);
+    write_reg(0x0052, y0);
+    write_reg(0x0053, y1);
+    write_reg(0x0020, x0);
+    write_reg(0x0021, y0);
+    rw_data_prepare();
+}
+
 /* fill rect area */
 static void r61580_fill_rect(const void *pixel, int x0, int y0, int x1, int y1)
 {
-    while(y0 < y1) {
-        r61580_draw_hline(pixel, x0, x1, y0);
-        y0++;
+    unsigned short *pp = (unsigned short *)pixel;
+    int total_pixels, xsize, ysize;
+
+    /* [5:4]-ID~ID0 [3]-AM, 1:vertical, 0:horizontal-0 */
+    write_reg(0x0003,0x1030 | (0<<3)); // AM=0 hline
+    write_reg(0x0050, x0);
+    write_reg(0x0051, x1);
+    write_reg(0x0052, y0);
+    write_reg(0x0053, y1);
+    write_reg(0x0020, x0);
+    write_reg(0x0021, y0);
+    rw_data_prepare();
+    xsize = x1 - x0 + 1;
+    ysize = y1 - y0 + 1;
+    total_pixels = xsize * ysize;
+    while(total_pixels) {
+        write_data(*pp);
+        total_pixels --;
     }
 }
 
+/* draw rect area */
+static void r61580_draw_rect(const void *pixel, int x0, int y0, int xsize, int ysize)
+{
+    unsigned short *pp = (unsigned short *)pixel;
+    int total_pixels;
+
+    /* [5:4]-ID~ID0 [3]-AM, 1:vertical, 0:horizontal-0 */
+    write_reg(0x0003,0x1030 | (0<<3)); // AM=0 hline
+    write_reg(0x0050, x0);
+    write_reg(0x0051, x0 + xsize - 1);
+    write_reg(0x0052, y0);
+    write_reg(0x0053, y0 + ysize - 1);
+    write_reg(0x0020, x0);
+    write_reg(0x0021, y0);
+    rw_data_prepare();
+    total_pixels = xsize * ysize;
+    while(total_pixels) {
+        write_data(*pp++);
+        total_pixels --;
+    }
+}
 
 /* blit a line */
 static void r61580_blit_line(const void* pixel, int x, int y, size_t size)
@@ -430,6 +486,10 @@ static void r61580_blit_line(const void* pixel, int x, int y, size_t size)
 
     /* [5:4]-ID~ID0 [3]-AM, 1:vertical, 0:horizontal-0 */
     write_reg(0x0003,0x1030 | (0<<3)); // AM=0 hline
+    write_reg(0x0050, 0);
+    write_reg(0x0051, 239);
+    write_reg(0x0052, 0);
+    write_reg(0x0053, 319);
 
     lcd_SetCursor(x, y);
     rw_data_prepare(); /* Prepare to write GRAM */
@@ -441,11 +501,14 @@ static void r61580_blit_line(const void* pixel, int x, int y, size_t size)
 
 static struct device_graphic_ops r61580_ops =
 {
+	.set_window = r61580_set_window,
+	.write_ram = r61580_write_data,
 	.set_pixel = r61580_set_pixel,
 	.get_pixel = r61580_get_pixel,
 	.draw_hline = r61580_draw_hline,
 	.draw_vline = r61580_draw_vline,
 	.fill_rect = r61580_fill_rect,
+	.draw_rect = r61580_draw_rect,
 	.blit_line = r61580_blit_line
 };
 

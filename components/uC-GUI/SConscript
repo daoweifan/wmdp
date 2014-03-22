@@ -735,7 +735,7 @@ src += LCDDriver_src
 group_core = DefineGroup('UCGUI_Core', Core_src, depend = ['CONFIG_USING_UCGUI'], CPPPATH = path)
 group_font = DefineGroup('UCGUI_Font', Font_src, depend = ['CONFIG_USING_UCGUI'], CPPPATH = [])
 group_driver = DefineGroup('UCGUI_Driver', LCDDriver_src, depend = ['CONFIG_USING_UCGUI'], CPPPATH = [])
-# group_WM = DefineGroup('UCGUI_WM', WM_src, depend = ['CONFIG_USING_UCGUI_WM'], CPPPATH = [])
+group_convertcolor = DefineGroup('UCGUI_ConvertColor', ConvertColor_src, depend = [], CPPPATH = [])
 
 if GetDepend('CONFIG_USING_UCGUI_OS'):
     src += GUI_X_OS_src
@@ -751,10 +751,10 @@ if GetDepend('CONFIG_USING_UCGUI_AntiAlias'):
     group_antiAlias = DefineGroup('UCGUI_AntiAlias', AntiAlias_src, depend = [], CPPPATH = [])
     Return('group_antiAlias')
 
-if GetDepend('CONFIG_USING_UCGUI_ConvertColor'):
-    src += ConvertColor_src
-    group_convertcolor = DefineGroup('UCGUI_ConvertColor', ConvertColor_src, depend = [], CPPPATH = [])
-    Return('group_convertcolor')
+# if GetDepend('CONFIG_USING_UCGUI_ConvertColor'):
+    # src += ConvertColor_src
+    # group_convertcolor = DefineGroup('UCGUI_ConvertColor', ConvertColor_src, depend = [], CPPPATH = [])
+    # Return('group_convertcolor')
 
 if GetDepend('CONFIG_USING_UCGUI_ConvertMono'):
     src += ConvertMono_src
@@ -786,6 +786,7 @@ if GetDepend('CONFIG_USING_UCGUI_Widget'):
     group_Widget = DefineGroup('UCGUI_Widget', Widget_src, depend = [], CPPPATH = [])
     Return('group_Widget')
 
+Return('group_convertcolor')
 Return('group_gui_x')
 Return('group_WM')
 Return('group_core')

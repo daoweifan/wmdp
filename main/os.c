@@ -85,6 +85,12 @@ void OS_Init(void)
 		init ++;
 	}
 
+#ifdef CONFIG_USING_UCGUI
+	int GUI_Init(void);
+	/* ucgui init */
+	GUI_Init();
+#endif
+
 	/* for task modules init */
 	init = (void (**)(void))SECTION_BEGIN(task_init);
 	end = (void (**)(void))SECTION_END(task_init);

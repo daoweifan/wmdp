@@ -38,9 +38,8 @@ Version-Date---Author-Explanation
 #include "LCD_Private.h"      /* private modul definitions & config */
 #include "GUI_Private.h"
 #include "GUIDebug.h"
-
-#if (LCD_CONTROLLER == -1) \
-    && (!defined(WIN32) | defined(LCD_SIMCONTROLLER))
+#include "device.h"
+#include "os.h"
 
 /*********************************************************************
 *
@@ -49,59 +48,13 @@ Version-Date---Author-Explanation
 **********************************************************************
 */
 
-#ifndef LCD_INIT_CONTROLLER
-  #define LCD_INIT_CONTROLLER()
-#endif
-
-/*********************************************************************
-*
-*       Macros for MIRROR_, SWAP_ and LUT_
-*/
-#if (!defined (LCD_LUT_COM) && !defined(LCD_LUT_SEG))
-  #if   (!LCD_MIRROR_X && !LCD_MIRROR_Y && !LCD_SWAP_XY) 
-    #define LOG2PHYS_X(x, y) x
-    #define LOG2PHYS_Y(x, y) y
-  #elif (!LCD_MIRROR_X && !LCD_MIRROR_Y &&  LCD_SWAP_XY) 
-    #define LOG2PHYS_X(x, y) y
-    #define LOG2PHYS_Y(x, y) x
-  #elif (!LCD_MIRROR_X &&  LCD_MIRROR_Y && !LCD_SWAP_XY) 
-    #define LOG2PHYS_X(x, y) x
-    #define LOG2PHYS_Y(x, y) LCD_YSIZE - 1 - (y)
-  #elif (!LCD_MIRROR_X &&  LCD_MIRROR_Y &&  LCD_SWAP_XY) 
-    #define LOG2PHYS_X(x, y) y
-    #define LOG2PHYS_Y(x, y) LCD_XSIZE - 1 - (x)
-  #elif ( LCD_MIRROR_X && !LCD_MIRROR_Y && !LCD_SWAP_XY) 
-    #define LOG2PHYS_X(x, y) LCD_XSIZE - 1 - (x)
-    #define LOG2PHYS_Y(x, y) y
-  #elif ( LCD_MIRROR_X && !LCD_MIRROR_Y &&  LCD_SWAP_XY) 
-    #define LOG2PHYS_X(x, y) LCD_YSIZE - 1 - (y)
-    #define LOG2PHYS_Y(x, y) x
-  #elif ( LCD_MIRROR_X &&  LCD_MIRROR_Y && !LCD_SWAP_XY) 
-    #define LOG2PHYS_X(x, y) LCD_XSIZE - 1 - (x)
-    #define LOG2PHYS_Y(x, y) LCD_YSIZE - 1 - (y)
-  #elif ( LCD_MIRROR_X &&  LCD_MIRROR_Y &&  LCD_SWAP_XY) 
-    #define LOG2PHYS_X(x, y) LCD_YSIZE - 1 - (y)
-    #define LOG2PHYS_Y(x, y) LCD_XSIZE - 1 - (x)
-  #endif
-#else
-  #if   ( defined (LCD_LUT_COM) && !defined(LCD_LUT_SEG))
-    #define LOG2PHYS_X(x, y) x
-    #define LOG2PHYS_Y(x, y) LCD__aLine2Com0[y]
-  #elif (!defined (LCD_LUT_COM) &&  defined(LCD_LUT_SEG))
-    #define LOG2PHYS_X(x, y) LCD__aCol2Seg0[x]
-    #define LOG2PHYS_Y(x, y) y
-  #elif ( defined (LCD_LUT_COM) &&  defined(LCD_LUT_SEG))
-    #define LOG2PHYS_X(x, y) LCD__aCol2Seg0[x]
-    #define LOG2PHYS_Y(x, y) LCD__aLine2Com0[y]
-  #endif
-#endif
-
 /*********************************************************************
 *
 *       Static functions
 *
 **********************************************************************
 */
+static struct device_graphic_ops * r61580_ops;
 
 /*********************************************************************
 *
@@ -329,6 +282,7 @@ static void  _DrawBitLine8BPP(int x, int y, U8 const GUI_UNI_PTR * p, int xsize,
 *
 *       Draw Bitmap 16 BPP
 */
+#if 0
 #if (LCD_BITSPERPIXEL > 8)
 static void  DrawBitLine16BPP(int x, int y, U16 const GUI_UNI_PTR * p, int xsize, const LCD_PIXELINDEX * pTrans) {
   LCD_PIXELINDEX pixel;
@@ -362,13 +316,64 @@ static void  DrawBitLine16BPP(int x, int y, U16 const GUI_UNI_PTR * p, int xsize
   }
 }
 #endif
-
+#endif
+#if 1
 /*********************************************************************
 *
-*       Exported functions
-*
-**********************************************************************
+*       Draw Bitmap 16 BPP
 */
+#if (LCD_BITSPERPIXEL > 8)
+static void  DrawBitLine16BPP(int x, int y, U16 const GUI_UNI_PTR * p, int xsize, const LCD_PIXELINDEX * pTrans) {
+  LCD_PIXELINDEX pixel;
+  void * pf;
+  if ((GUI_Context.DrawMode & LCD_DRAWMODE_TRANS) == 0) {
+    if (pTrans) {
+      r61580_ops->set_window(x, y, x+xsize-1, y);
+      for (; xsize > 0; xsize--, x++, p++) {
+        pixel = *p;
+        // LCD_L0_SetPixelIndex(x, y, *(pTrans + pixel));
+        pf = (void *)(pTrans + pixel);
+        r61580_ops->write_ram(pf);
+      }
+    } else {
+      // for (;xsize > 0; xsize--, x++, p++) {
+        // LCD_L0_SetPixelIndex(x, y, *p);
+      // }
+      r61580_ops->blit_line(p, x, y, xsize);
+    }
+  } else {
+    if (pTrans) {
+      for (; xsize > 0; xsize--, x++, p++) {
+        pixel = *p;
+        if (pixel) {
+          LCD_L0_SetPixelIndex(x, y, *(pTrans + pixel));
+        }
+      }
+    } else {
+      for (; xsize > 0; xsize--, x++, p++) {
+        pixel = *p;
+        if (pixel) {
+          LCD_L0_SetPixelIndex(x, y, pixel);
+        }
+      }
+    }
+  }
+}
+#endif
+#endif
+/*********************************************************************
+*
+*       LCD_L0_DrawPixel
+*
+*  Purpose:  Writes 1 pixel into the display.
+*/
+void LCD_L0_DrawPixel(int x, int y) {
+	if (GUI_Context.DrawMode & LCD_DRAWMODE_XOR) {
+		LCD_L0_XorPixel(x, y);
+	} else {
+		r61580_ops->set_pixel(&LCD_COLORINDEX, x, y);
+	}
+}
 
 /*********************************************************************
 *
@@ -379,19 +384,9 @@ static void  DrawBitLine16BPP(int x, int y, U16 const GUI_UNI_PTR * p, int xsize
 *   calling this routine make sure that the coordinates are in range, so
 *   that no check on the parameters needs to be performed.
 */
-void LCD_L0_SetPixelIndex(int x, int y, int PixelIndex) {
-  /* Convert logical into physical coordinates (Dep. on LCDConf.h) */
-  #if LCD_SWAP_XY | LCD_MIRROR_X| LCD_MIRROR_Y
-    int xPhys = LOG2PHYS_X(x, y);
-    int yPhys = LOG2PHYS_Y(x, y);
-  #else
-    #define xPhys x
-    #define yPhys y
-  #endif
-  /* Write into hardware ... Adapt to your system */
-  {
-    /* ... */
-  }
+void LCD_L0_SetPixelIndex(int x, int y, int PixelIndex)
+{
+  r61580_ops->set_pixel(&PixelIndex, x, y);
 }
 
 /*********************************************************************
@@ -403,20 +398,10 @@ void LCD_L0_SetPixelIndex(int x, int y, int PixelIndex) {
 *   calling this routine make sure that the coordinates are in range, so
 *   that no check on the parameters needs to be performed.
 */
-unsigned int LCD_L0_GetPixelIndex(int x, int y) {
+unsigned int LCD_L0_GetPixelIndex(int x, int y)
+{
   LCD_PIXELINDEX PixelIndex;
-  /* Convert logical into physical coordinates (Dep. on LCDConf.h) */
-  #if LCD_SWAP_XY | LCD_MIRROR_X| LCD_MIRROR_Y
-    int xPhys = LOG2PHYS_X(x, y);
-    int yPhys = LOG2PHYS_Y(x, y);
-  #else
-    #define xPhys x
-    #define yPhys y
-  #endif
-  /* Read from hardware ... Adapt to your system */
-  {
-    PixelIndex = 0;/* ... */
-  }
+  r61580_ops->get_pixel(&PixelIndex, x, y);
   return PixelIndex;
 }
 
@@ -424,7 +409,8 @@ unsigned int LCD_L0_GetPixelIndex(int x, int y) {
 *
 *       LCD_L0_XorPixel
 */
-void LCD_L0_XorPixel(int x, int y) {
+void LCD_L0_XorPixel(int x, int y)
+{
   LCD_PIXELINDEX PixelIndex = LCD_L0_GetPixelIndex(x, y);
   LCD_L0_SetPixelIndex(x, y, LCD_NUM_COLORS - PixelIndex - 1);
 }
@@ -433,42 +419,27 @@ void LCD_L0_XorPixel(int x, int y) {
 *
 *       LCD_L0_DrawHLine
 */
-void LCD_L0_DrawHLine  (int x0, int y,  int x1) {
-  if (GUI_Context.DrawMode & LCD_DRAWMODE_XOR) {
-    for (; x0 <= x1; x0++) {
-      LCD_L0_XorPixel(x0, y);
-    }
-  } else {
-    for (; x0 <= x1; x0++) {
-      LCD_L0_SetPixelIndex(x0, y, LCD_COLORINDEX);
-    }
-  }
+void LCD_L0_DrawHLine  (int x0, int y,  int x1)
+{
+  r61580_ops->draw_hline(&LCD_COLORINDEX, x0, x1, y);
 }
 
 /*********************************************************************
 *
 *       LCD_L0_DrawVLine
 */
-void LCD_L0_DrawVLine  (int x, int y0,  int y1) {
-  if (GUI_Context.DrawMode & LCD_DRAWMODE_XOR) {
-    for (; y0 <= y1; y0++) {
-      LCD_L0_XorPixel(x, y0);
-    }
-  } else {
-    for (; y0 <= y1; y0++) {
-      LCD_L0_SetPixelIndex(x, y0, LCD_COLORINDEX);
-    }
-  }
+void LCD_L0_DrawVLine  (int x, int y0,  int y1)
+{
+  r61580_ops->draw_vline(&LCD_COLORINDEX, x, y0, y1);
 }
 
 /*********************************************************************
 *
 *       LCD_L0_FillRect
 */
-void LCD_L0_FillRect(int x0, int y0, int x1, int y1) {
-  for (; y0 <= y1; y0++) {
-    LCD_L0_DrawHLine(x0, y0, x1);
-  }
+void LCD_L0_FillRect(int x0, int y0, int x1, int y1)
+{
+  r61580_ops->fill_rect(&LCD_COLORINDEX, x0, y0, x1, y1);
 }
 
 /*********************************************************************
@@ -518,7 +489,8 @@ void LCD_L0_DrawBitmap(int x0, int y0,
 *
 *       LCD_L0_SetOrg
 */
-void LCD_L0_SetOrg(int x, int y) {
+void LCD_L0_SetOrg(int x, int y)
+{
   GUI_USE_PARA(x);
   GUI_USE_PARA(y);
 }
@@ -527,16 +499,14 @@ void LCD_L0_SetOrg(int x, int y) {
 *
 *       LCD_On / LCD_Off
 */
-void LCD_On (void) {
-#ifdef LCD_ON
-  LCD_ON();
-#endif
+void LCD_On (void)
+{
+  //todo realize
 }
 
-void LCD_Off (void) {
-#ifdef LCD_OFF
-  LCD_OFF();
-#endif
+void LCD_Off (void)
+{
+  //todo realize
 }
 
 /*********************************************************************
@@ -546,8 +516,12 @@ void LCD_Off (void) {
 * Purpose:
 *   Initialises the LCD-controller.
 */
-int  LCD_L0_Init(void) {
-  LCD_INIT_CONTROLLER();
+int  LCD_L0_Init(void)
+{
+  device_t lcd;
+  lcd = device_find_by_name("r61580");
+  r61580_ops = (struct device_graphic_ops *)lcd->user_data;
+  // r61580_ops->init();
   return 0;
 }
 
@@ -555,14 +529,11 @@ int  LCD_L0_Init(void) {
 *
 *       LCD_L0_SetLUTEntry
 */
-void LCD_L0_SetLUTEntry(U8 Pos, LCD_COLOR Color) {
+void LCD_L0_SetLUTEntry(U8 Pos, LCD_COLOR Color)
+{
   GUI_USE_PARA(Pos);
   GUI_USE_PARA(Color);
 }
 
-#else
+int GUI_Init(void);
 
-void LCDDummy_c(void);
-void LCDDummy_c(void) { } /* avoid empty object files */
-
-#endif /* (LCD_CONTROLLER undefined) */
