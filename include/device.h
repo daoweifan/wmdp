@@ -127,6 +127,23 @@ struct device_rect_info
 };
 
 /**
+ * touch device control command
+ */
+#define TOUCH_GET_CALIBRATION_DATA     1
+#define TOUCH_GOON_CALIBRATION         2
+#define TOUCH_GET_X_POSITION           3
+#define TOUCH_GET_Y_POSITION           4
+
+/**
+ * touch calibration data
+ */
+struct calibration_data
+{
+	uint16_t min_x, max_x;
+	uint16_t min_y, max_y;
+};
+
+/**
  * graphic operations
  */
 struct device_graphic_ops
@@ -144,7 +161,6 @@ struct device_graphic_ops
     void (*blit_line) (const void *pixel, int x, int y, size_t size);
 };
 #define graphix_ops(device)          ((struct device_graphic_ops *)(device->user_data))
-
 
 typedef struct device *device_t;
 /**

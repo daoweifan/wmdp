@@ -83,16 +83,21 @@ typedef unsigned int   OS_CPU_SR;                  /* Define size of CPU status 
  * @addtogroup Error
  */
 /*@{*/
-/* RT-Thread error code definitions */
+/* wm platform error code definitions */
 #define ERROR_EOK                          0               /**< There is no error       */
+#define ERROR_OK                           0               /**< There is no error       */
 #define ERROR_ERROR                        1               /**< A generic error happens */
+#define ERROR_GENERIC                      1               /**< A generic error happens */
 #define ERROR_ETIMEOUT                     2               /**< Timed out               */
 #define ERROR_EFULL                        3               /**< The resource is full    */
 #define ERROR_EEMPTY                       4               /**< The resource is empty   */
 #define ERROR_ENOMEM                       5               /**< No memory               */
 #define ERROR_ENOSYS                       6               /**< No system               */
+#define ERROR_NOSYS                        6               /**< No system               */
 #define ERROR_EBUSY                        7               /**< Busy                    */
-#define ERROR_EIO							8 				/**< IO error 				 */
+#define ERROR_BUSY                         7               /**< Busy                    */
+#define ERROR_EIO                          8               /**< IO error                */
+#define ERROR_IO                           8               /**< IO error                */
 /*@}*/
 
 
