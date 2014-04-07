@@ -1,102 +1,100 @@
 /*
- * File      : spi_core.c
- * This file is part of RT-Thread RTOS
- * COPYRIGHT (C) 2006 - 2012, RT-Thread Development Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Change Logs:
- * Date           Author       Notes
- * 2012-01-08     bernard      first version.
- * 2012-02-03     bernard      add const attribute to the ops.
- * 2012-05-15     dzzxzz       fixed the return value in attach_device.
- * 2012-05-18     bernard      Changed SPI message to message list.
- *                             Added take/release SPI device/bus interface.
- * 2012-09-28     aozima       fixed rt_spi_release_bus assert error.
- */
+*********************************************************************************************************
+*                                                WMDP
+*                                          WM Develop Platform
+*
+*                              (c) Copyright 2010-2014, WM, China
+*                                           All Rights Reserved
+*
+* File    : spi_core.h
+* By      : Fan Daowei
+* Version : V1.0
+*
+* LICENSING TERMS:
+* ---------------
+*   WMDP is provided in source form for FREE evaluation, for educational use or for peaceful research.
+* If you plan on using  WMDP  in a commercial product you need to contact WM to properly license
+* its use in your product. We provide ALL the source code for your convenience and to help you experience
+* WMDP.   The fact that the  source is provided does  NOT  mean that you can use it without  paying a
+* licensing fee.
+*********************************************************************************************************
+*/
+#include <assert.h>
+#include <string.h>
+#include "os.h"
+#include "spi.h"
 
-#include <drivers/spi.h>
+extern err_t spi_bus_device_init(struct spi_bus *bus, const char *name);
+extern err_t spidev_device_init(struct spi_device *dev, const char *name);
 
-extern rt_err_t rt_spi_bus_device_init(struct rt_spi_bus *bus, const char *name);
-extern rt_err_t rt_spidev_device_init(struct rt_spi_device *dev, const char *name);
-
-rt_err_t rt_spi_bus_register(struct rt_spi_bus       *bus,
+err_t spi_bus_register(struct spi_bus       *bus,
                              const char              *name,
-                             const struct rt_spi_ops *ops)
+                             const struct spi_ops *ops)
 {
-    rt_err_t result;
+    err_t result;
 
-    result = rt_spi_bus_device_init(bus, name);
-    if (result != RT_EOK)
+    result = spi_bus_device_init(bus, name);
+    if (result != ERROR_OK)
         return result;
 
     /* initialize mutex lock */
-    rt_mutex_init(&(bus->lock), name, RT_IPC_FLAG_FIFO);
+    //mutex_init(&(bus->lock), name, IPC_FLAG_FIFO);
     /* set ops */
     bus->ops = ops;
     /* initialize owner */
-    bus->owner = RT_NULL;
+    bus->owner = NULL;
 
-    return RT_EOK;
+    return ERROR_OK;
 }
 
-rt_err_t rt_spi_bus_attach_device(struct rt_spi_device *device,
+err_t spi_bus_attach_device(struct spi_device *device,
                                   const char           *name,
                                   const char           *bus_name,
                                   void                 *user_data)
 {
-    rt_err_t result;
-    rt_device_t bus;
+    err_t result;
+    device_t bus;
 
     /* get physical spi bus */
-    bus = rt_device_find(bus_name);
-    if (bus != RT_NULL && bus->type == RT_Device_Class_SPIBUS)
+    bus = device_find_by_name(bus_name);
+    if (bus != NULL && bus->type == Device_Class_SPIBUS)
     {
-        device->bus = (struct rt_spi_bus *)bus;
+        device->bus = (struct spi_bus *)bus;
 
         /* initialize spidev device */
-        result = rt_spidev_device_init(device, name);
-        if (result != RT_EOK)
+        result = spidev_device_init(device, name);
+        if (result != ERROR_OK)
             return result;
 
-        rt_memset(&device->config, 0, sizeof(device->config));
+        memset(&device->config, 0, sizeof(device->config));
         device->parent.user_data = user_data;
 
-        return RT_EOK;
+        return ERROR_OK;
     }
 
     /* not found the host bus */
-    return -RT_ERROR;
+    return -ERROR_GENERIC;
 }
 
-rt_err_t rt_spi_configure(struct rt_spi_device        *device,
-                          struct rt_spi_configuration *cfg)
+err_t spi_configure(struct spi_device        *device,
+                          struct spi_configuration *cfg)
 {
-    rt_err_t result;
+    err_t result = ERROR_OK;
+    int irq_state;
 
-    RT_ASSERT(device != RT_NULL);
+    assert(device != NULL);
 
     /* set configuration */
     device->config.data_width = cfg->data_width;
-    device->config.mode       = cfg->mode & RT_SPI_MODE_MASK ;
+    device->config.mode       = cfg->mode & SPI_MODE_MASK ;
     device->config.max_hz     = cfg->max_hz ;
 
-    if (device->bus != RT_NULL)
+    if (device->bus != NULL)
     {
-        result = rt_mutex_take(&(device->bus->lock), RT_WAITING_FOREVER);
-        if (result == RT_EOK)
+        // result = mutex_take(&(device->bus->lock), WAITING_FOREVER);
+        // DISABLE_INTERRUPTS();
+        irq_state = ENTER_CRITICAL_SECTION();
+        if (result == ERROR_OK)
         {
             if (device->bus->owner == device)
             {
@@ -104,33 +102,38 @@ rt_err_t rt_spi_configure(struct rt_spi_device        *device,
             }
 
             /* release lock */
-            rt_mutex_release(&(device->bus->lock));
+            // mutex_release(&(device->bus->lock));
         }
+        // ENABLE_INTERRUPTS();
+        LEAVE_CRITICAL_SECTION(irq_state);
     }
 
-    return RT_EOK;
+    return ERROR_OK;
 }
 
-rt_err_t rt_spi_send_then_send(struct rt_spi_device *device,
+err_t spi_send_then_send(struct spi_device *device,
                                const void           *send_buf1,
-                               rt_size_t             send_length1,
+                               size_t             send_length1,
                                const void           *send_buf2,
-                               rt_size_t             send_length2)
+                               size_t             send_length2)
 {
-    rt_err_t result;
-    struct rt_spi_message message;
+    err_t result = ERROR_OK;
+    int irq_state;
+    struct spi_message message;
 
-    RT_ASSERT(device != RT_NULL);
-    RT_ASSERT(device->bus != RT_NULL);
+    assert(device != NULL);
+    assert(device->bus != NULL);
 
-    result = rt_mutex_take(&(device->bus->lock), RT_WAITING_FOREVER);
-    if (result == RT_EOK)
+    // result = mutex_take(&(device->bus->lock), WAITING_FOREVER);
+    // DISABLE_INTERRUPTS();
+    irq_state = ENTER_CRITICAL_SECTION();
+    if (result == ERROR_OK)
     {
         if (device->bus->owner != device)
         {
             /* not the same owner as current, re-configure SPI bus */
             result = device->bus->ops->configure(device, &device->config);
-            if (result == RT_EOK)
+            if (result == ERROR_OK)
             {
                 /* set SPI bus owner */
                 device->bus->owner = device;
@@ -138,74 +141,80 @@ rt_err_t rt_spi_send_then_send(struct rt_spi_device *device,
             else
             {
                 /* configure SPI bus failed */
-                result = -RT_EIO;
+                result = -ERROR_IO;
                 goto __exit;
             }
         }
 
         /* send data1 */
         message.send_buf   = send_buf1;
-        message.recv_buf   = RT_NULL;
+        message.recv_buf   = NULL;
         message.length     = send_length1;
         message.cs_take    = 1;
         message.cs_release = 0;
-        message.next       = RT_NULL;
+        message.next       = NULL;
 
         result = device->bus->ops->xfer(device, &message);
         if (result == 0)
         {
-            result = -RT_EIO;
+            result = -ERROR_IO;
             goto __exit;
         }
 
         /* send data2 */
         message.send_buf   = send_buf2;
-        message.recv_buf   = RT_NULL;
+        message.recv_buf   = NULL;
         message.length     = send_length2;
         message.cs_take    = 0;
         message.cs_release = 1;
-        message.next       = RT_NULL;
+        message.next       = NULL;
 
         result = device->bus->ops->xfer(device, &message);
         if (result == 0)
         {
-            result = -RT_EIO;
+            result = -ERROR_IO;
             goto __exit;
         }
 
-        result = RT_EOK;
+        result = ERROR_OK;
     }
     else
     {
-        return -RT_EIO;
+        return -ERROR_IO;
     }
+    
 
 __exit:
-    rt_mutex_release(&(device->bus->lock));
+    // ENABLE_INTERRUPTS();
+    // mutex_release(&(device->bus->lock));
+    LEAVE_CRITICAL_SECTION(irq_state);
 
     return result;
 }
 
-rt_err_t rt_spi_send_then_recv(struct rt_spi_device *device,
+err_t spi_send_then_recv(struct spi_device *device,
                                const void           *send_buf,
-                               rt_size_t             send_length,
+                               size_t             send_length,
                                void                 *recv_buf,
-                               rt_size_t             recv_length)
+                               size_t             recv_length)
 {
-    rt_err_t result;
-    struct rt_spi_message message;
+    err_t result = ERROR_OK;
+    int irq_state;
+    struct spi_message message;
 
-    RT_ASSERT(device != RT_NULL);
-    RT_ASSERT(device->bus != RT_NULL);
+    assert(device != NULL);
+    assert(device->bus != NULL);
 
-    result = rt_mutex_take(&(device->bus->lock), RT_WAITING_FOREVER);
-    if (result == RT_EOK)
+    // DISABLE_INTERRUPTS();
+    irq_state = ENTER_CRITICAL_SECTION();
+    // result = mutex_take(&(device->bus->lock), WAITING_FOREVER);
+    if (result == ERROR_OK)
     {
         if (device->bus->owner != device)
         {
             /* not the same owner as current, re-configure SPI bus */
             result = device->bus->ops->configure(device, &device->config);
-            if (result == RT_EOK)
+            if (result == ERROR_OK)
             {
                 /* set SPI bus owner */
                 device->bus->owner = device;
@@ -213,73 +222,78 @@ rt_err_t rt_spi_send_then_recv(struct rt_spi_device *device,
             else
             {
                 /* configure SPI bus failed */
-                result = -RT_EIO;
+                result = -ERROR_IO;
                 goto __exit;
             }
         }
 
         /* send data */
         message.send_buf   = send_buf;
-        message.recv_buf   = RT_NULL;
+        message.recv_buf   = NULL;
         message.length     = send_length;
         message.cs_take    = 1;
         message.cs_release = 0;
-        message.next       = RT_NULL;
+        message.next       = NULL;
 
         result = device->bus->ops->xfer(device, &message);
         if (result == 0)
         {
-            result = -RT_EIO;
+            result = -ERROR_IO;
             goto __exit;
         }
 
         /* recv data */
-        message.send_buf   = RT_NULL;
+        message.send_buf   = NULL;
         message.recv_buf   = recv_buf;
         message.length     = recv_length;
         message.cs_take    = 0;
         message.cs_release = 1;
-        message.next       = RT_NULL;
+        message.next       = NULL;
 
         result = device->bus->ops->xfer(device, &message);
         if (result == 0)
         {
-            result = -RT_EIO;
+            result = -ERROR_IO;
             goto __exit;
         }
 
-        result = RT_EOK;
+        result = ERROR_OK;
     }
     else
     {
-        return -RT_EIO;
+        return -ERROR_IO;
     }
 
 __exit:
-    rt_mutex_release(&(device->bus->lock));
+    // mutex_release(&(device->bus->lock));
+    // ENABLE_INTERRUPTS();
+    LEAVE_CRITICAL_SECTION(irq_state);
 
     return result;
 }
 
-rt_size_t rt_spi_transfer(struct rt_spi_device *device,
+size_t spi_transfer(struct spi_device *device,
                           const void           *send_buf,
                           void                 *recv_buf,
-                          rt_size_t             length)
+                          size_t             length)
 {
-    rt_err_t result;
-    struct rt_spi_message message;
+    err_t result = ERROR_OK;
+    int irq_state;
+    struct spi_message message;
 
-    RT_ASSERT(device != RT_NULL);
-    RT_ASSERT(device->bus != RT_NULL);
+    assert(device != NULL);
+    assert(device->bus != NULL);
 
-    result = rt_mutex_take(&(device->bus->lock), RT_WAITING_FOREVER);
-    if (result == RT_EOK)
+    // DISABLE_INTERRUPTS();
+    irq_state = ENTER_CRITICAL_SECTION();
+    // result = mutex_take(&(device->bus->lock), WAITING_FOREVER);
+    if (result == ERROR_OK)
     {
         if (device->bus->owner != device)
         {
             /* not the same owner as current, re-configure SPI bus */
             result = device->bus->ops->configure(device, &device->config);
-            if (result == RT_EOK)
+            if (result == ERROR_OK)
             {
                 /* set SPI bus owner */
                 device->bus->owner = device;
@@ -287,7 +301,7 @@ rt_size_t rt_spi_transfer(struct rt_spi_device *device,
             else
             {
                 /* configure SPI bus failed */
-                rt_set_errno(-RT_EIO);
+                // wm_set_errno(-ERROR_IO);
                 result = 0;
                 goto __exit;
             }
@@ -299,59 +313,64 @@ rt_size_t rt_spi_transfer(struct rt_spi_device *device,
         message.length     = length;
         message.cs_take    = 1;
         message.cs_release = 1;
-        message.next       = RT_NULL;
+        message.next       = NULL;
 
         /* transfer message */
         result = device->bus->ops->xfer(device, &message);
         if (result == 0)
         {
-            rt_set_errno(-RT_EIO);
+            // wm_set_errno(-ERROR_IO);
             goto __exit;
         }
     }
     else
     {
-        rt_set_errno(-RT_EIO);
+        // wm_set_errno(-ERROR_IO);
 
         return 0;
     }
 
 __exit:
-    rt_mutex_release(&(device->bus->lock));
+    // mutex_release(&(device->bus->lock));
+    // ENABLE_INTERRUPTS();
+    LEAVE_CRITICAL_SECTION(irq_state);
 
     return result;
 }
 
-struct rt_spi_message *rt_spi_transfer_message(struct rt_spi_device  *device,
-                                               struct rt_spi_message *message)
+struct spi_message *spi_transfer_message(struct spi_device  *device,
+                                               struct spi_message *message)
 {
-    rt_err_t result;
-    struct rt_spi_message *index;
+    err_t result = ERROR_OK;
+    int irq_state;
+    struct spi_message *index;
 
-    RT_ASSERT(device != RT_NULL);
+    assert(device != NULL);
 
     /* get first message */
     index = message;
-    if (index == RT_NULL)
+    if (index == NULL)
         return index;
 
-    result = rt_mutex_take(&(device->bus->lock), RT_WAITING_FOREVER);
-    if (result != RT_EOK)
+    // DISABLE_INTERRUPTS();
+    irq_state = ENTER_CRITICAL_SECTION();
+    // result = mutex_take(&(device->bus->lock), WAITING_FOREVER);
+    if (result != ERROR_OK)
     {
-        rt_set_errno(-RT_EBUSY);
+        // wm_set_errno(-ERROR_BUSY);
 
         return index;
     }
 
     /* reset errno */
-    rt_set_errno(RT_EOK);
+    // wm_set_errno(ERROR_OK);
 
     /* configure SPI bus */
     if (device->bus->owner != device)
     {
         /* not the same owner as current, re-configure SPI bus */
         result = device->bus->ops->configure(device, &device->config);
-        if (result == RT_EOK)
+        if (result == ERROR_OK)
         {
             /* set SPI bus owner */
             device->bus->owner = device;
@@ -359,20 +378,20 @@ struct rt_spi_message *rt_spi_transfer_message(struct rt_spi_device  *device,
         else
         {
             /* configure SPI bus failed */
-            rt_set_errno(-RT_EIO);
+            // wm_set_errno(-ERROR_IO);
             result = 0;
             goto __exit;
         }
     }
 
     /* transmit each SPI message */
-    while (index != RT_NULL)
+    while (index != NULL)
     {
         /* transmit SPI message */
         result = device->bus->ops->xfer(device, index);
         if (result == 0)
         {
-            rt_set_errno(-RT_EIO);
+            // wm_set_errno(-ERROR_IO);
             break;
         }
 
@@ -381,35 +400,37 @@ struct rt_spi_message *rt_spi_transfer_message(struct rt_spi_device  *device,
 
 __exit:
     /* release bus lock */
-    rt_mutex_release(&(device->bus->lock));
+    // mutex_release(&(device->bus->lock));
+    // ENABLE_INTERRUPTS();
+    LEAVE_CRITICAL_SECTION(irq_state);
 
     return index;
 }
 
-rt_err_t rt_spi_take_bus(struct rt_spi_device *device)
+err_t spi_take_bus(struct spi_device *device)
 {
-    rt_err_t result = RT_EOK;
+    err_t result = ERROR_OK;
 
-    RT_ASSERT(device != RT_NULL);
-    RT_ASSERT(device->bus != RT_NULL);
+    assert(device != NULL);
+    assert(device->bus != NULL);
 
-    result = rt_mutex_take(&(device->bus->lock), RT_WAITING_FOREVER);
-    if (result != RT_EOK)
+    // result = mutex_take(&(device->bus->lock), WAITING_FOREVER);
+    if (result != ERROR_OK)
     {
-        rt_set_errno(-RT_EBUSY);
+        // wm_set_errno(-ERROR_BUSY);
 
-        return -RT_EBUSY;
+        return -ERROR_BUSY;
     }
 
     /* reset errno */
-    rt_set_errno(RT_EOK);
+    // wm_set_errno(ERROR_OK);
 
     /* configure SPI bus */
     if (device->bus->owner != device)
     {
         /* not the same owner as current, re-configure SPI bus */
         result = device->bus->ops->configure(device, &device->config);
-        if (result == RT_EOK)
+        if (result == ERROR_OK)
         {
             /* set SPI bus owner */
             device->bus->owner = device;
@@ -417,38 +438,38 @@ rt_err_t rt_spi_take_bus(struct rt_spi_device *device)
         else
         {
             /* configure SPI bus failed */
-            rt_set_errno(-RT_EIO);
+            // wm_set_errno(-ERROR_IO);
             /* release lock */
-            rt_mutex_release(&(device->bus->lock));
+            // mutex_release(&(device->bus->lock));
 
-            return -RT_EIO;
+            return -ERROR_IO;
         }
     }
 
     return result;
 }
 
-rt_err_t rt_spi_release_bus(struct rt_spi_device *device)
+err_t spi_release_bus(struct spi_device *device)
 {
-    RT_ASSERT(device != RT_NULL);
-    RT_ASSERT(device->bus != RT_NULL);
-    RT_ASSERT(device->bus->owner == device);
+    assert(device != NULL);
+    assert(device->bus != NULL);
+    assert(device->bus->owner == device);
 
     /* release lock */
-    rt_mutex_release(&(device->bus->lock));
+    // mutex_release(&(device->bus->lock));
 
-    return RT_EOK;
+    return ERROR_OK;
 }
 
-rt_err_t rt_spi_take(struct rt_spi_device *device)
+err_t spi_take(struct spi_device *device)
 {
-    rt_err_t result;
-    struct rt_spi_message message;
+    err_t result;
+    struct spi_message message;
 
-    RT_ASSERT(device != RT_NULL);
-    RT_ASSERT(device->bus != RT_NULL);
+    assert(device != NULL);
+    assert(device->bus != NULL);
 
-    rt_memset(&message, 0, sizeof(message));
+    memset(&message, 0, sizeof(message));
     message.cs_take = 1;
 
     result = device->bus->ops->xfer(device, &message);
@@ -456,15 +477,15 @@ rt_err_t rt_spi_take(struct rt_spi_device *device)
     return result;
 }
 
-rt_err_t rt_spi_release(struct rt_spi_device *device)
+err_t spi_release(struct spi_device *device)
 {
-    rt_err_t result;
-    struct rt_spi_message message;
+    err_t result;
+    struct spi_message message;
 
-    RT_ASSERT(device != RT_NULL);
-    RT_ASSERT(device->bus != RT_NULL);
+    assert(device != NULL);
+    assert(device->bus != NULL);
 
-    rt_memset(&message, 0, sizeof(message));
+    memset(&message, 0, sizeof(message));
     message.cs_release = 1;
 
     result = device->bus->ops->xfer(device, &message);

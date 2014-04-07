@@ -1,8 +1,12 @@
 from building import *
 
 cwd     = GetCurrentDir()
-src	= Glob('*.c')
-CPPPATH = [cwd + '/../include']
-group = DefineGroup('DeviceDrivers', src, depend = ['RT_USING_SPI'], CPPPATH = CPPPATH)
+# src     = Glob('*.c')
+src     = ['spi_core.c', 'spi_dev.c']
+if GetDepend('CONFIG_USING_XPT2046'):
+    src += ['xpt2046.c']
+CPPPATH = [cwd]
+print CPPPATH
+group   = DefineGroup('spi', src, depend = ['CONFIG_USING_SPI'], CPPPATH = CPPPATH)
 
 Return('group')

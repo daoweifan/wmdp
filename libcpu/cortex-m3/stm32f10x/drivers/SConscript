@@ -2,8 +2,14 @@ Import('wmconfig')
 from building import *
 
 cwd     = GetCurrentDir()
-src     = Glob('*.c')
+# src     = Glob('*.c')
+src     = []
 CPPPATH = [cwd]
+
+if GetDepend('CONFIG_USING_SERIAL'):
+    src += ['usart.c']
+if GetDepend('CONFIG_USING_SPI'):
+    src += ['stm32_spi.c']
 
 group = DefineGroup('libcpu', src, depend = [''], CPPPATH = CPPPATH)
 
