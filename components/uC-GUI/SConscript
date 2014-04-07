@@ -4,11 +4,15 @@ import os
 from building import *
 
 GUI_X_OS_src = Split("""
-GUI_X_Touch.c
 GUI_X_uCOS.c
 """)
 
+GUI_X_Touch_src = Split("""
+GUI_X_Touch.c
+""")
+
 GUI_X_src = Split("""
+GUI_X_Touch.c
 GUI_X.c
 """)
 
@@ -735,15 +739,15 @@ src += LCDDriver_src
 group_core = DefineGroup('UCGUI_Core', Core_src, depend = ['CONFIG_USING_UCGUI'], CPPPATH = path)
 group_font = DefineGroup('UCGUI_Font', Font_src, depend = ['CONFIG_USING_UCGUI'], CPPPATH = [])
 group_driver = DefineGroup('UCGUI_Driver', LCDDriver_src, depend = ['CONFIG_USING_UCGUI'], CPPPATH = [])
-group_convertcolor = DefineGroup('UCGUI_ConvertColor', ConvertColor_src, depend = [], CPPPATH = [])
+group_convertcolor = DefineGroup('UCGUI_ConvertColor', ConvertColor_src, depend = ['CONFIG_USING_UCGUI'], CPPPATH = [])
 
 if GetDepend('CONFIG_USING_UCGUI_OS'):
     src += GUI_X_OS_src
-    group_gui_x = DefineGroup('UCGUI_GUI_X', GUI_X_OS_src, depend = [], CPPPATH = [])
+    group_gui_x = DefineGroup('UCGUI_GUI_X', GUI_X_OS_src, depend = ['CONFIG_USING_UCGUI'], CPPPATH = [])
     # Return('group_gui_x')
 else:
     src += GUI_X_src
-    group_gui_x = DefineGroup('UCGUI_GUI_X', GUI_X_src, depend = [], CPPPATH = [])
+    group_gui_x = DefineGroup('UCGUI_GUI_X', GUI_X_src, depend = ['CONFIG_USING_UCGUI'], CPPPATH = [])
     # Return('group_gui_x')
 
 if GetDepend('CONFIG_USING_UCGUI_AntiAlias'):

@@ -20,6 +20,8 @@ Purpose     : Config / System dependent externals for GUI
 #include "GUI.h"
 #include "GUI_X.h"
 #include "os_time.h"
+#include "wmconfig.h"
+#include "device.h"
 
 /*********************************************************************
 *
@@ -57,8 +59,13 @@ void GUI_X_Delay(int ms) {
 *     some hardware which needs to be up and running before the GUI.
 *     If not required, leave this routine blank.
 */
-
-void GUI_X_Init(void) {}
+device_t gui_touch;
+void GUI_X_Init(void)
+{
+#if CONFIG_USING_XPT2046
+	gui_touch = device_find_by_name("xpt2046");
+#endif
+}
 
 
 /*********************************************************************

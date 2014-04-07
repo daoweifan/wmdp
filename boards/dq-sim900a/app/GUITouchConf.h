@@ -12,47 +12,24 @@
 *              in any way. We appreciate your understanding and fairness.
 *
 ----------------------------------------------------------------------
-File        : GUI_TOUCH_X.C
-Purpose     : Config / System dependent externals for GUI
----------------------------END-OF-HEADER------------------------------
+File        : GUITouch.Conf.h
+Purpose     : Configures touch screen module
+----------------------------------------------------------------------
 */
 
-#include "GUI.h"
-#include "GUI_X.h"
-#include "device.h"
-#include "os.h"
-#include <stdio.h>
 
-extern struct device * gui_touch;
+#ifndef GUITOUCH_CONF_H
+#define GUITOUCH_CONF_H
 
-void GUI_TOUCH_X_ActivateX(void)
-{
-	return;
-}
+#define GUI_TOUCH_AD_LEFT		0x00A0
+#define GUI_TOUCH_AD_RIGHT		0x0738
+#define GUI_TOUCH_AD_TOP		0x06BB
+#define GUI_TOUCH_AD_BOTTOM		0x0118
 
-void GUI_TOUCH_X_ActivateY(void)
-{
-	return;
-}
 
-int GUI_TOUCH_X_MeasureX(void) 
-{
-	uint16_t xposition;
-	device_control(gui_touch, TOUCH_GET_X_POSITION, &xposition);
-	// printf("%x\n", xposition);
-	return xposition;
-}
+#define GUI_TOUCH_SWAP_XY		0
 
-int GUI_TOUCH_X_MeasureY(void)
-{
-	uint16_t yposition;
-	device_control(gui_touch, TOUCH_GET_Y_POSITION, &yposition);
-	// printf("%x\n", yposition);
-	return yposition;
-}
+#define GUI_TOUCH_MIRROR_X		0
+#define GUI_TOUCH_MIRROR_Y		0
 
-void GUI_BG_Callback(void)
-{
-	GUI_TOUCH_Exec();
-}
-EXPORT_OS_BG_16MS_UPDATE(GUI_BG_Callback)
+#endif /* GUITOUCH_CONF_H */
