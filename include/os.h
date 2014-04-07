@@ -121,4 +121,7 @@ void OS_Init(void);
 void OS_BG_Update(void);
 void OS_FG_Update(void);
 
+int OS_Get_Error(void);
+void OS_Set_Error(int error);
+
 #endif /*__TASK_H_*/

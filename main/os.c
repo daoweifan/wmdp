@@ -36,9 +36,20 @@ typedef union {
 } PitFlagsType;
 
 static volatile PitFlagsType Pit_Flags;
+static volatile int OS_Error;
 
 /*normally this routine will be provided by cpu/xxx/cmsis/system_xxx.c*/
 extern void SystemInit (void);
+
+int OS_Get_Error(void)
+{
+	return OS_Error;
+}
+
+void OS_Set_Error(int error)
+{
+	OS_Error = error;
+}
 
 void OS_Init(void)
 {
