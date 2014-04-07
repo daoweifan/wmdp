@@ -28,7 +28,7 @@
 #include "gui.h"
 
 /************* LCD Module debug command **************/
-extern GUI_CONST_STORAGE GUI_BITMAP bmwendy;
+// extern GUI_CONST_STORAGE GUI_BITMAP bmwendy;
 
 static int cmd_gui_func(int argc, char *argv[])
 {
@@ -38,7 +38,8 @@ static int cmd_gui_func(int argc, char *argv[])
 		"usage:\n" \
 		" gui print str         , output string on screen\n" \
 		" gui print str x y     , output string on screen at x y\n" \
-		" gui bmp wendy         , draw a bmp picture 240*320\n" \
+		" gui bmp times         , draw a bmp picture 240*320\n" \
+		" gui cursor show/hide  , show or hide the mouser cursor\n"
 	};
 	
 	if(argc < 2) {
@@ -57,10 +58,21 @@ static int cmd_gui_func(int argc, char *argv[])
 		return 0;
 	}
 
+	if (!strcmp(argv[1], "cursor")) {
+		if (!strcmp(argv[2], "show"))
+			GUI_CURSOR_Show();
+		else if (!strcmp(argv[2], "hide"))
+			GUI_CURSOR_Hide();
+		return 0;
+	}
+
 	if (!strcmp(argv[1], "bmp")) {
 		if (argc == 3) {
-			GUI_Clear();
-			GUI_DrawBitmap((void const *)&bmwendy, 0, 0);
+			temp1 = atoi(argv[2]);
+			while(temp1--) {
+				GUI_Clear();
+				// GUI_DrawBitmap((void const *)&bmwendy, 0, 0);
+			}
 		}
 		return 0;
 	}
