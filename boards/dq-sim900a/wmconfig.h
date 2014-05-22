@@ -37,6 +37,15 @@
 #define CONFIG_USING_UART3           1
 
 /*
+ * driver spi
+ */
+#define CONFIG_USING_SPI             1
+#define CONFIG_USING_SPI1            1
+// #define CONFIG_USING_SPI2            1
+// #define CONFIG_USING_SPI3            1
+#define CONFIG_USING_XPT2046         1
+
+/*
  * components
  */
 #define CONFIG_USING_COMMON          1
