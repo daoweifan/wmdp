@@ -5,7 +5,7 @@
 define symbol __ICFEDIT_intvec_start__ = 0x08000000;
 /*-Memory Regions-*/
 define symbol __ICFEDIT_region_ROM_start__   = 0x08000000;
-define symbol __ICFEDIT_region_ROM_end__     = 0x080097FF;
+define symbol __ICFEDIT_region_ROM_end__     = 0x0803FFFF;
 define symbol __ICFEDIT_region_NVROM_start__ = 0x08009800;
 define symbol __ICFEDIT_region_NVROM_end__   = 0x08009FFF;
 define symbol __ICFEDIT_region_RAM_start__   = 0x20000010;
