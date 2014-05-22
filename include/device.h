@@ -130,9 +130,12 @@ struct device_rect_info
  * touch device control command
  */
 #define TOUCH_GET_CALIBRATION_DATA     1
-#define TOUCH_GOON_CALIBRATION         2
-#define TOUCH_GET_X_POSITION           3
-#define TOUCH_GET_Y_POSITION           4
+#define TOUCH_SET_CALIBRATION_DATA     2
+#define TOUCH_GOON_CALIBRATION         3
+#define TOUCH_GET_X_POSITION           4
+#define TOUCH_GET_Y_POSITION           5
+#define TOUCH_GET_Z1_POSITION          6
+#define TOUCH_GET_Z2_POSITION          7
 
 /**
  * touch calibration data
