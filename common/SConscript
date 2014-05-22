@@ -3,7 +3,7 @@ from building import *
 
 cwd     = GetCurrentDir()
 src     = Glob('*.c')
-src     =['device.c', 'ringbuf.c', 'console.c', 'circbuf.c']
+src     =['device.c', 'ringbuf.c', 'console.c', 'circbuf.c', 'sort.c']
 CPPPATH = [cwd]
 
 group = DefineGroup('common', src, depend = ['CONFIG_USING_COMMON'], CPPPATH = CPPPATH)
