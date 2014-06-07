@@ -40,7 +40,7 @@
 #endif
 
 #ifndef CONFIG_SHELL_LEN_CMD_MAX
-#define CONFIG_SHELL_LEN_CMD_MAX 32
+#define CONFIG_SHELL_LEN_CMD_MAX 64
 #endif
 
 #ifndef CONFIG_SHELL_NR_PARA_MAX
