@@ -17,7 +17,7 @@
 #include "device.h"
 
 
-#define BUFF_SIZE	64
+#define CMD_BUFF_SIZE	64
 #define GSM_CMD_LINE_END "\r\n"
 #define TIMEOUT_MS   2000        /* Default timeout 2s */
 #define TIMEOUT_HTTP 35000      /* Http timeout, 30s */
@@ -72,6 +72,7 @@ static void sim_inserted(char *line);
 static void no_sim(char *line);
 static void parse_network(char *line);
 static void parse_sapbr(char *line);
+static int gsm_ftp_size(void);
 // static void socket_receive(char *line);
 static void pdp_off(char *line);
 // static void socket_closed(char *line);
@@ -102,6 +103,8 @@ static Message urc_messages[] = {
 	{ "\\+COPS:",               .next_state=STATE_UNKNOWN,      .func = parse_network },
 	{ "\\+SAPBR:",              .next_state=STATE_UNKNOWN,      .func = parse_sapbr },
 	{ "\\+PDP: DEACT",          .next_state=STATE_UNKNOWN,      .func = pdp_off },
+	// { "\\+FTPGET",              .next_state=STATE_UNKNOWN,      .func = ftp_get },
+	// { "\\+FTPSIZE",             .next_state=STATE_UNKNOWN,      .func = ftp_size },
 	// { "\\+RECEIVE",      .func = socket_receive },
 	/* Return codes */
 	{ "OK",                     .next_state=STATE_UNKNOWN,       .func = handle_ok },
@@ -248,7 +251,7 @@ int gsm_cmd(const char *cmd)
 {
 	Message *m;
 	int retry, t, i;
-	char buf[BUFF_SIZE], c;
+	char buf[CMD_BUFF_SIZE], c;
 
 	/* Flush buffers */
 	gsm_disable_raw_mode();
@@ -279,7 +282,7 @@ int gsm_cmd(const char *cmd)
 					if ('\r' == c)
 						continue;
 					buf[i++] = (char)c;
-					if(i==BUFF_SIZE)
+					if(i == CMD_BUFF_SIZE)
 						break;
 				} else {
 					buf[i] = 0;
@@ -368,7 +371,7 @@ int gsm_is_raw_mode()
 }
 
 /* Wait for specific pattern */
-int gsm_wait_cpy(const char *pattern, int timeout, char *line, size_t buf_size)
+int gsm_wait_cpy(const char *pattern, int timeout, char *line, size_t buf_len)
 {
 	char buf[256], c;
 	int ret, i;
@@ -384,7 +387,7 @@ int gsm_wait_cpy(const char *pattern, int timeout, char *line, size_t buf_size)
 	ret = AT_OK;
 	
 	while (1) {
-		if (gsm_rx_buf.size > 0) {
+		if (buf_size(&gsm_rx_buf) > 0) {
 			// DISABLE_INTERRUPTS();
 			buf_pop(&gsm_rx_buf, &c, 1);
 			// ENABLE_INTERRUPTS();
@@ -411,11 +414,14 @@ int gsm_wait_cpy(const char *pattern, int timeout, char *line, size_t buf_size)
 		strcpy(line, buf);
 		i = strlen(line);
 		while (1) {
-			if (gsm_rx_buf.size > 0) {
+			if (buf_size(&gsm_rx_buf) > 0) {
 				// DISABLE_INTERRUPTS();
 				buf_pop(&gsm_rx_buf, &c, 1);
 				// ENABLE_INTERRUPTS();
 				line[i++] = c;
+			}
+			if ('\n' == c) {
+				break;
 			}
 			if (time_left(t) < 0) {
 				ret = AT_TIMEOUT;
@@ -443,8 +449,20 @@ int gsm_cmd_wait(const char *cmd, const char *response, int timeout)
 	gsm_set_raw_mode();
 	gsm_uart_write(cmd);
 	gsm_uart_write(GSM_CMD_LINE_END);
-	printf("GSM CMD: %s\n", cmd);
+	// printf("GSM CMD: %s\n", cmd);
 	r = gsm_wait(response, timeout);
+	gsm_disable_raw_mode();
+	return r;
+}
+
+int gsm_cmd_wait_cpy(const char *cmd, const char *response, int timeout, char *line, size_t buf_len)
+{
+	int r;
+	gsm_set_raw_mode();
+	gsm_uart_write(cmd);
+	gsm_uart_write(GSM_CMD_LINE_END);
+	// printf("GSM CMD: %s\n", cmd);
+	r = gsm_wait_cpy(response, timeout, line, buf_len);
 	gsm_disable_raw_mode();
 	return r;
 }
@@ -597,6 +615,126 @@ int gsm_gprs_disable()
 		return 0; //Was not enabled
 
 	return gsm_cmd("AT+SAPBR=0,1"); //Close Bearer
+}
+
+/****************** GSM FTP API Funciton ************************/
+typedef struct {
+	char ip[16];
+	char name[16];
+	char password[16];
+} ftp_session_t;
+
+ftp_session_t ftp_session;
+
+void gsm_ftp_init(void)
+{
+	strcpy(ftp_session.ip, "67.198.245.244");
+	strcpy(ftp_session.name, "daoweifan");
+	strcpy(ftp_session.password, "conquer");
+}
+
+void gsm_ftp_setip(const char *ip)
+{
+	strcpy(ftp_session.ip, ip);
+}
+
+void gsm_ftp_setname(const char *name)
+{
+	strcpy(ftp_session.name, name);
+}
+
+void gsm_ftp_setpw(const char *pw)
+{
+	strcpy(ftp_session.password, pw);
+}
+
+void gsm_ftp_connect(void)
+{
+	int rc = 0;
+
+	rc += gsm_cmd("AT+FTPCID=1");
+	rc += gsm_cmd_fmt("AT+FTPSERV=\"%s\"", ftp_session.ip);
+	rc += gsm_cmd_fmt("AT+FTPUN=\"%s\"", ftp_session.name);
+	rc += gsm_cmd_fmt("AT+FTPPW=\"%s\"", ftp_session.password);
+	rc += gsm_cmd_fmt("AT+FTPGETNAME=\"%s\"", "wmconfig.h");
+	rc += gsm_cmd("AT+FTPGETPATH=\"/\"");
+}
+
+static int gsm_ftp_pre_fread(void)
+{
+	int size,con,ret;
+	char size_buffer[64];
+
+	gsm_cmd("AT+FTPGET=1");
+	ret = gsm_wait_cpy("\\+FTPGET:", 20000, size_buffer, 64);
+	if (ret == AT_OK) {
+		if(2 == sscanf(size_buffer, "+FTPGET:%d,%d", &con, &size)) {
+			if ((con == 1) && (size == 1)) {
+				printf("connect successful\n");
+				ret = 0;
+			} else {
+				printf("connect error %d", size);
+				ret = 1;
+			}
+		}
+	}
+
+	return ret;
+}
+
+/*NOTE: this function can only be called in backgroud */
+static size_t gsm_ftp_fread(void *buf, size_t size, void * fhandler)
+{
+	int result, data_size, rx_buf_size, temp_size, index;
+	char cmd_rsp_buf[32], cmd_req_buf[32];
+
+	/* send request data cmd */
+	sprintf(cmd_req_buf, "AT+FTPGET=2,%d", size);
+	result = gsm_cmd_wait_cpy(cmd_req_buf, "\\+FTPGET:", 5000, (char *)cmd_rsp_buf, 32);
+	if (result != AT_OK)
+		return -1;
+
+	/* get data successful */
+	if(1 == sscanf(cmd_rsp_buf, "+FTPGET:2,%d", &data_size)) {
+		if (data_size > 0) {
+			if (buf_left(&gsm_rx_buf) >= data_size) {
+				/* if rx interrupt rx buf is bigger than data_size */
+				while(buf_size(&gsm_rx_buf) < data_size);
+				buf_pop(&gsm_rx_buf, buf, data_size);
+			} else {
+				/* if rx interrupt rx buf is less than data_size */
+				temp_size = data_size;
+				index = 0;
+				while (temp_size > 0) {
+					rx_buf_size = buf_size(&gsm_rx_buf);
+					if (rx_buf_size > 0) {
+						buf_pop(&gsm_rx_buf, (char *)buf + index, rx_buf_size);
+						temp_size --;
+						index += rx_buf_size;
+					}
+				}
+			}
+		}
+	} else {
+		return -1;
+	}
+
+	return data_size;
+}
+
+static int gsm_ftp_size(void)
+{
+	int size, ret;
+	char size_buffer[64];
+	
+	gsm_cmd("AT+FTPSIZE");
+	ret = gsm_wait_cpy("\\+FTPSIZE:", 20000, size_buffer, 64);
+	if (ret == AT_OK) {
+		if(1 == sscanf(size_buffer, "+FTPSIZE:1,0,%d", &size)) {
+			printf("file size is %d\n", size);
+		}
+	}
+	return size;
 }
 
 #if 0
@@ -824,9 +962,11 @@ void socket_closed(char *line)
 #if 1
 #include "command.h"
 #include "os.h"
-
+static char file_data_buf[65];
 static int cmd_gsm_func(int argc, char *argv[])
 {
+	int ret;
+
 	const char *usage = { \
 		"usage:\n " \
 		"gsm init uartx        , map gsm to uart and init uart channel\n " \
@@ -834,7 +974,11 @@ static int cmd_gsm_func(int argc, char *argv[])
 		"gsm cmd line          , send cmd line to gsm module\n "
 		"gsm info              , display the vendor&module info\n " \
 		"gsm gprs on/off       , turn gprs on/off\n "
-		"gsm gps status        , return gps status\n"
+		"gsm gps status        , return gps status\n "
+		"gsm ftp init          , init para ftp parameter\n "
+		"gsm ftp config        , config the ftp client paramter\n "
+		"gsm ftp size          , get the file size on ftp server\n "
+		"gsm ftp read          , read the file size on ftp server\n"
 	};
 	
 	if(argc < 2) {
@@ -900,6 +1044,34 @@ static int cmd_gsm_func(int argc, char *argv[])
 			gsm_gprs_disable();
 		} else {
 			printf("Error Param\n");
+		}
+		return 0;
+	}
+
+	if (!strcmp(argv[1], "ftp")) {
+		if (argv[2][1] == 'n') {
+			gsm_ftp_init();
+		}
+		if (argv[2][0] == 's') {
+			gsm_ftp_size();
+		}
+		if (argv[2][0] == 'c') {
+			gsm_ftp_connect();
+		}
+		if (argv[2][0] == 'r') {
+			if (gsm_ftp_pre_fread() == AT_OK) {
+				do {
+					ret = gsm_ftp_fread(file_data_buf, 64, NULL);
+					if (ret > 0) {
+						file_data_buf[ret] = 0;
+						printf("%s", file_data_buf);
+					} else {
+						break;
+					}
+				} while(1);
+			} else {
+				printf("Read Error\n");
+			}
 		}
 		return 0;
 	}
