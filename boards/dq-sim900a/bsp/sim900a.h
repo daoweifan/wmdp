@@ -33,7 +33,7 @@ int gsm_cmd_wait(const char *cmd, const char *response, int timeout);    /* Send
 int gsm_cmd_wait_fmt(const char *response, int timeout, char *fmt, ...); /* Send formatted string and wait for response */
 int gsm_wait(const char *pattern, int timeout);                          /* wait for a pattern to appear */
 int gsm_wait_cpy(const char *pattern, int timeout, char *buf, size_t buf_size); /* Wait and copy rest of the line to a buffer */
-
+static int gsm_ftp_size(void);
 
 void gsm_uart_write(const char *line);
 void gsm_set_power_state(enum Power_mode mode);
@@ -43,6 +43,16 @@ int gsm_read_line(char *buf, int max_len);
 int gsm_read_raw(char *buf, int max_len);
 int gsm_gprs_enable(void);
 int gsm_gprs_disable(void);
+
+/* gsm ftp function api */
+void gsm_ftp_def_init(void);
+void gsm_ftp_setip(const char *ip);
+void gsm_ftp_setname(const char *name);
+void gsm_ftp_setpw(const char *pw);
+void gsm_ftp_connect(void);
+int gsm_ftp_pre_fread(void);
+int gsm_ftp_fread(void *buf, int size, void * fhandler);
+
 
 /* Internals */
 void gsm_line_received(void);

@@ -72,7 +72,6 @@ static void sim_inserted(char *line);
 static void no_sim(char *line);
 static void parse_network(char *line);
 static void parse_sapbr(char *line);
-static int gsm_ftp_size(void);
 // static void socket_receive(char *line);
 static void pdp_off(char *line);
 // static void socket_closed(char *line);
@@ -626,7 +625,7 @@ typedef struct {
 
 ftp_session_t ftp_session;
 
-void gsm_ftp_init(void)
+void gsm_ftp_def_init(void)
 {
 	strcpy(ftp_session.ip, "67.198.245.244");
 	strcpy(ftp_session.name, "daoweifan");
@@ -660,7 +659,7 @@ void gsm_ftp_connect(void)
 	rc += gsm_cmd("AT+FTPGETPATH=\"/\"");
 }
 
-static int gsm_ftp_pre_fread(void)
+int gsm_ftp_pre_fread(void)
 {
 	int size,con,ret;
 	char size_buffer[64];
@@ -683,7 +682,7 @@ static int gsm_ftp_pre_fread(void)
 }
 
 /*NOTE: this function can only be called in backgroud */
-static size_t gsm_ftp_fread(void *buf, size_t size, void * fhandler)
+int gsm_ftp_fread(void *buf, int size, void * fhandler)
 {
 	int result, data_size, rx_buf_size, temp_size, index;
 	char cmd_rsp_buf[32], cmd_req_buf[32];
@@ -1050,7 +1049,7 @@ static int cmd_gsm_func(int argc, char *argv[])
 
 	if (!strcmp(argv[1], "ftp")) {
 		if (argv[2][1] == 'n') {
-			gsm_ftp_init();
+			gsm_ftp_def_init();
 		}
 		if (argv[2][0] == 's') {
 			gsm_ftp_size();
