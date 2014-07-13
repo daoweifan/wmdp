@@ -1,0 +1,21 @@
+# for module compiling
+import os
+Import('WM_ROOT')
+
+Import('wmconfig')
+from building import *
+
+cwd     = GetCurrentDir()
+src     = Glob('*.c')
+CPPPATH = [cwd]
+if wmconfig.CROSS_TOOL == 'keil':
+    LINKFLAGS = ' --keep *_entry '
+else:
+    LINKFLAGS = '' 
+
+CPPPATH =CPPPATH + [WM_ROOT + '/boards/dq-stm32']
+CPPPATH =CPPPATH + [WM_ROOT + '/include']
+
+group = DefineGroup('app', src, depend = [''], CPPPATH = CPPPATH, LINKFLAGS = LINKFLAGS)
+
+Return('group')
