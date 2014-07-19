@@ -8,13 +8,17 @@ objs = []
 cwd  = GetCurrentDir()
 list = os.listdir(cwd)
 
+if wmconfig.CROSS_TOOL == 'iar':
+    objs = objs + SConscript(os.path.join('iar', 'SConscript'))
+if wmconfig.CROSS_TOOL == 'keil':
+    objs = objs + SConscript(os.path.join('keil', 'SConscript'))
+if wmconfig.CROSS_TOOL == 'gcc':
+    objs = objs + SConscript(os.path.join('gcc', 'SConscript'))
+
+list.remove('iar')
+list.remove('keil')
+list.remove('gcc')
 for item in list:
-    if wmconfig.CROSS_TOOL == 'keil':
-        if item == 'iar':
-            continue
-    if wmconfig.CROSS_TOOL == 'iar':
-        if item == 'keil':
-            continue
     if os.path.isfile(os.path.join(cwd, item, 'SConscript')):
         objs = objs + SConscript(os.path.join(item, 'SConscript'))
 

@@ -6,7 +6,7 @@ src     = ['spi_core.c', 'spi_dev.c']
 if GetDepend('CONFIG_USING_XPT2046'):
     src += ['xpt2046.c']
 CPPPATH = [cwd]
-print CPPPATH
+# print CPPPAT
 group   = DefineGroup('spi', src, depend = ['CONFIG_USING_SPI'], CPPPATH = CPPPATH)
 
 Return('group')

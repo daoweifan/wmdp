@@ -7,6 +7,8 @@ if wmconfig.CROSS_TOOL == 'keil':
     src     = Glob('*_keil.s')
 elif wmconfig.CROSS_TOOL == 'iar':
     src     = Glob('*_iar.s')
+elif wmconfig.CROSS_TOOL == 'gcc':
+    src     = Glob('*_gcc.s')
 else :
     LINKFLAGS = ''
 
