@@ -1,0 +1,29 @@
+Import('WM_ROOT')
+Import('wmconfig')
+import os
+from building import *
+
+# The set of source files associated with this SConscript file.
+cwd  = GetCurrentDir()
+list = os.listdir(cwd)
+
+path = []
+path.append(cwd + '\\' + 'diag')
+path.append(cwd + '\\' + 'newlib')
+print path
+
+# diag_src = Split("""
+# diag/Trace.c
+# diag/trace_impl.c
+# """)
+# group_diag = DefineGroup('diag', diag_src, depend = [''], CPPPATH = path)
+# Return('group_diag')
+
+newlib_src = Split("""
+newlib/_write.c
+newlib/_exit.c
+newlib/_sbrk.c
+newlib/_syscalls.c
+""")
+group_newlib = DefineGroup('newlib', newlib_src, depend = [''], CPPPATH = path)
+Return('group_newlib')
