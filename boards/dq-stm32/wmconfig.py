@@ -51,14 +51,14 @@ if PLATFORM == 'gcc':
     DEVICE = ' -mcpu=cortex-m3 -mthumb -ffunction-sections -fdata-sections'
     CFLAGS = DEVICE
     AFLAGS = ' -c' + DEVICE + ' -x assembler-with-cpp'
-    LFLAGS = DEVICE + ' -nostartfiles -Wl,--gc-sections,-Map=wmdp.map,-cref,-u,Reset_Handler -T stm32f103_hd_rom.ld'
+    LFLAGS = DEVICE + ' -Wall -nostartfiles -Wl,--gc-sections,-Map=wmdp.map,-cref,-u,Reset_Handler -T stm32f103_hd_rom.ld'
 
     CPATH = ''
     LPATH = ''
 
     if BUILD == 'debug':
-        CFLAGS += ' -O0 -gdwarf-2'
-        AFLAGS += ' -gdwarf-2'
+        CFLAGS += ' -O0 -gdwarf-2 -g3 -DSTDIO_RETARGET_UART -std=c99'
+        AFLAGS += ' -gdwarf-2 -g3'
     else:
         CFLAGS += ' -O2'
 
