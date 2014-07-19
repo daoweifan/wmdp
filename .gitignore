@@ -20,6 +20,8 @@
 *.map
 *.out
 *.s
+*.log
+*.axf
 
 #debug files
 *.gdbinit
