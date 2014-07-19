@@ -23,6 +23,8 @@
 #include "device.h"
 #include "spi.h"
 
+#define off_t          uint32_t
+
 /* SPI bus device interface, compatible with RT-Thread 0.3.x/1.0.x */
 static err_t _spi_bus_device_init(device_t dev)
 {

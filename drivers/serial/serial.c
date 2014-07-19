@@ -23,6 +23,8 @@
 #include "device.h"
 #include "drivers/serial.h"
 
+#define off_t          uint32_t
+
 INLINE void serial_ringbuf_init(struct serial_ringbuf *rbuffer)
 {
     memset(rbuffer->buffer, 0, sizeof(rbuffer->buffer));
