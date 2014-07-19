@@ -53,18 +53,21 @@ struct cmd_queue_s {
 
 #define CMD_FLAG_REPEAT 1
 
-#ifdef __CC_ARM      /* ARM Compiler */
+#ifdef __CC_ARM                         /* ARM Compiler */
     extern const int shell_cmd$$Base;
     extern const int shell_cmd$$Limit;
 #elif defined (__IAR_SYSTEMS_ICC__)     /* for IAR Compiler */
     #pragma section="shell_cmd" 4
+#elif defined (__GNUC__)                /* GNU GCC Compiler */
+    extern const int __shell_cmd_start;
+    extern const int __shell_cmd_end;
 #else
     #error not supported tool chain
 #endif
 
 /* command table pragma */
 #define EXPORT_SHELL_CMD(cmd) \
-	const cmd_t * const cmd##_entry SECTION("shell_cmd") = &##cmd;
+	const cmd_t * const cmd##_entry SECTION("shell_cmd") = &cmd;
 
 /*cmd module i/f*/
 void cmd_Init(void);

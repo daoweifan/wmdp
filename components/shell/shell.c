@@ -35,9 +35,15 @@ static const char *shell_prompt_def = CONFIG_SHELL_PROMPT;
 static LIST_HEAD(shell_queue);
 static struct shell_s *shell; /*current shell*/
 
+#ifdef __GNUC__)                /* GNU GCC Compiler */
+#define shell_print(...) do { \
+	console_printf(__VA_ARGS__); \
+} while (0)
+#else
 #define shell_print(...) do { \
 	printf(__VA_ARGS__); \
 } while (0)
+#endif
 
 void shell_Init(void)
 {

@@ -46,7 +46,6 @@ typedef enum _bool{false,true} bool;
 // typedef double         FP64;                       /* Double precision floating point                    */
 
 #define boolean        uint8_t
-#define off_t          uint32_t
 #define err_t          int32_t
 
 
@@ -131,35 +130,14 @@ typedef unsigned int   OS_CPU_SR;                  /* Define size of CPU status 
     #define RTT_API
 
 #elif defined (__GNUC__)                /* GNU GCC Compiler */
-    #ifdef RT_USING_NEWLIB
-        #include <stdarg.h>
-    #else
-        #if __GNUC__ < 4
-            typedef void *__sys_va_list;
-            typedef __sys_va_list       va_list;
-            #define __va_rounded_size(type) \
-                (((sizeof(type) + sizeof(int) - 1) / sizeof(int)) * sizeof(int))
-            #define va_start(ap, lastarg)   \
-                (ap = ((char *) &(lastarg) + __va_rounded_size(lastarg)))
-            #define va_end(ap)          ((void)0)
-            /*  little endian */
-            #define va_arg(ap, type)    \
-                (ap = (__sys_va_list) ((char *)(ap) + __va_rounded_size(type)),  \
-                *((type *) (void *) ((char *)(ap) - __va_rounded_size(type))))
-        #else
-            typedef __builtin_va_list   __gnuc_va_list;
-            typedef __gnuc_va_list      va_list;
-            #define va_start(v,l)       __builtin_va_start(v,l)
-            #define va_end(v)           __builtin_va_end(v)
-            #define va_arg(v,l)         __builtin_va_arg(v,l)
-        #endif
-    #endif
-
+    #include <stdarg.h>
     #define SECTION(x)                  __attribute__((section(x)))
+    #define SECTION_BEGIN(x)            &__##x##_start
+    #define SECTION_END(x)              &__##x##_end
     #define UNUSED                      __attribute__((unused))
     #define USED                        __attribute__((used))
     #define ALIGN(n)                    __attribute__((aligned(n)))
-    #define rt_inline                   static __inline
+    #define INLINE                      static __inline
     #define RTT_API
 #elif defined (__ADSPBLACKFIN__)        /* for VisualDSP++ Compiler */
     #include <stdarg.h>
